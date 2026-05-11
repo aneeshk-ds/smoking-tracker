@@ -1,6 +1,6 @@
 {
-  "name": "Tracker",
-  "short_name": "Tracker",
+  "name": "Smoking Tracker",
+  "short_name": "Smoking Tracker",
   "description": "A quiet tracker for the habit you're working on.",
   "start_url": "./",
   "display": "standalone",

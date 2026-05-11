@@ -533,7 +533,7 @@ export default function Settings() {
 
         {/* ── About ── */}
         <div className="text-center pb-2 space-y-1">
-          <p className="text-dim text-[10px] font-mono">Tracker v0.1.0</p>
+          <p className="text-dim text-[10px] font-mono">Smoking Tracker v0.1.0</p>
           <p className="text-dim text-[10px] font-mono">Privacy-first. All data stays on your device.</p>
         </div>
 

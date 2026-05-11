@@ -1,4 +1,4 @@
-# Tracker
+# Smoking Tracker
 
 A private, offline-first PWA for tracking a smoking habit. No accounts. No cloud. All data stays on the device.
 

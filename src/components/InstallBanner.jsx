@@ -75,7 +75,7 @@ export default function InstallBanner() {
             </>
           ) : (
             <>
-              <p className="text-text text-xs font-mono font-medium mb-0.5">Install Tracker</p>
+              <p className="text-text text-xs font-mono font-medium mb-0.5">Install Smoking Tracker</p>
               <button
                 onClick={install}
                 className="text-accent text-[10px] font-mono"
