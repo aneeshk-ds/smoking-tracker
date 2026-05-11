@@ -1,0 +1,205 @@
+import { useEffect, useState } from 'react'
+import {
+  getHeatmapData,
+  getWeekdayWeekendBreakdown,
+  getTrendSeries,
+  getTriggerBreakdown,
+  getLocationBreakdown,
+  getSettings,
+  getCigarettesByRange,
+  getMoneySaved,
+} from '../lib/storage'
+import { formatCurrency } from '../lib/format'
+import BottomNav from '../components/BottomNav'
+import Heatmap from '../components/Heatmap'
+import TrendChart from '../components/TrendChart'
+import BarBreakdown from '../components/BarBreakdown'
+import WeekdayWeekendSplit from '../components/WeekdayWeekendSplit'
+import ProjectionCard from '../components/ProjectionCard'
+
+const RANGES = [7, 30, 90]
+
+export default function Insights() {
+  const [range, setRange] = useState(30)
+  const [data, setData] = useState(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    let mounted = true
+    setLoading(true)
+    async function load() {
+      const endMs = Date.now()
+      const startMs = endMs - range * 24 * 60 * 60 * 1000
+
+      const [
+        heatmap,
+        weekSplit,
+        trend,
+        triggers,
+        locations,
+        settings,
+        cigs,
+        moneySaved,
+      ] = await Promise.all([
+        getHeatmapData(range),
+        getWeekdayWeekendBreakdown(range),
+        getTrendSeries(range),
+        getTriggerBreakdown(range),
+        getLocationBreakdown(range),
+        getSettings(),
+        getCigarettesByRange(startMs, endMs),
+        getMoneySaved(range),
+      ])
+
+      if (!mounted) return
+
+      const totalSmoked = cigs.length
+      const totalSpent = cigs.reduce((s, c) => s + (c.cost || 0), 0)
+      const avgPerDay = range > 0 ? Math.round((totalSmoked / range) * 10) / 10 : 0
+      const dailyCost = range > 0 ? totalSpent / range : 0
+
+      // Most active hour across period
+      const hourCounts = new Array(24).fill(0)
+      for (const c of cigs) {
+        hourCounts[new Date(c.timestamp).getHours()]++
+      }
+      const peakHour = hourCounts.indexOf(Math.max(...hourCounts))
+
+      setData({
+        heatmap, weekSplit, trend, triggers, locations,
+        settings, totalSmoked, totalSpent, avgPerDay,
+        dailyCost, moneySaved,
+        currency: settings?.currency ?? 'INR',
+        dailyTarget: settings?.goal === 'reduce' ? settings.dailyTarget : null,
+        peakHour,
+      })
+      setLoading(false)
+    }
+    load()
+    return () => { mounted = false }
+  }, [range])
+
+  return (
+    <div className="min-h-screen bg-bg pb-24">
+      {/* Sticky header + range pills */}
+      <div className="sticky top-0 z-10 bg-bg px-6 pt-8 pb-3">
+        <h1 className="font-display text-2xl text-text mb-4">Insights</h1>
+        <div className="flex gap-2">
+          {RANGES.map((r) => (
+            <button
+              key={r}
+              onClick={() => setRange(r)}
+              className={`flex-1 py-2 rounded-xl text-xs font-mono border transition-all duration-150 ${
+                range === r
+                  ? 'bg-accent text-bg border-accent'
+                  : 'bg-surface-2 text-muted border-border'
+              }`}
+            >
+              {r}d
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {loading ? (
+        <div className="flex items-center justify-center h-40">
+          <div className="w-2 h-2 rounded-full bg-accent animate-pulse" />
+        </div>
+      ) : (
+        <div className="px-4 max-w-md mx-auto space-y-3">
+
+          {/* ── Summary strip ── */}
+          <div className="grid grid-cols-4 gap-2">
+            <SummaryCell label="Total" value={data.totalSmoked} unit="cigs" />
+            <SummaryCell label="Avg/day" value={data.avgPerDay} unit="" />
+            <SummaryCell label="Spent" value={formatCurrency(data.totalSpent, data.currency)} unit="" small />
+            {data.moneySaved > 0 ? (
+              <SummaryCell label="Saved" value={formatCurrency(data.moneySaved, data.currency)} unit="" accent small />
+            ) : (
+              <SummaryCell label="Peak" value={formatHour(data.peakHour)} unit="" small />
+            )}
+          </div>
+
+          {/* ── Weekday vs Weekend ── */}
+          <Card title="Weekday vs Weekend">
+            <WeekdayWeekendSplit data={data.weekSplit} />
+          </Card>
+
+          {/* ── Heatmap ── */}
+          <Card title="When you smoke" subtitle={`Last ${range} days`}>
+            <Heatmap grid={data.heatmap} />
+          </Card>
+
+          {/* ── Trend ── */}
+          <Card
+            title="Daily count"
+            subtitle={data.dailyTarget ? `Target: ${data.dailyTarget}/day` : null}
+            dangerSubtitle={!!data.dailyTarget}
+          >
+            <TrendChart data={data.trend} dailyTarget={data.dailyTarget} />
+          </Card>
+
+          {/* ── Triggers + Locations side by side ── */}
+          <div className="grid grid-cols-2 gap-3">
+            <Card title="Triggers" compact>
+              <BarBreakdown items={data.triggers} />
+            </Card>
+            <Card title="Locations" compact>
+              <BarBreakdown items={data.locations} color="var(--muted)" />
+            </Card>
+          </div>
+
+          {/* ── Cost projection ── */}
+          <Card title="If nothing changes" subtitle="Projected spend">
+            <ProjectionCard dailyCost={data.dailyCost} currency={data.currency} />
+          </Card>
+
+        </div>
+      )}
+
+      <BottomNav />
+    </div>
+  )
+}
+
+// ── Sub-components ──
+
+function Card({ title, subtitle, dangerSubtitle, compact, children }) {
+  return (
+    <div className="rounded-2xl border border-border bg-surface p-4">
+      <div className="flex items-baseline justify-between mb-3">
+        <span className="text-text text-xs font-mono font-medium tracking-wide uppercase">{title}</span>
+        {subtitle && (
+          <span
+            className="text-[10px] font-mono"
+            style={{ color: dangerSubtitle ? 'var(--danger)' : 'var(--dim)' }}
+          >
+            {subtitle}
+          </span>
+        )}
+      </div>
+      {children}
+    </div>
+  )
+}
+
+function SummaryCell({ label, value, unit, accent, small }) {
+  return (
+    <div className="rounded-xl bg-surface border border-border p-2.5 text-center">
+      <div className="text-dim text-[9px] font-mono mb-1">{label}</div>
+      <div
+        className={`font-display leading-tight ${small ? 'text-sm' : 'text-xl'}`}
+        style={{ color: accent ? 'var(--accent)' : 'var(--text)' }}
+      >
+        {value}
+      </div>
+      {unit && <div className="text-dim text-[9px] font-mono">{unit}</div>}
+    </div>
+  )
+}
+
+function formatHour(h) {
+  if (h === 0) return '12 AM'
+  if (h === 12) return '12 PM'
+  return h < 12 ? `${h} AM` : `${h - 12} PM`
+}
