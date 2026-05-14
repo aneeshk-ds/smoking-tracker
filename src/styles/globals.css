@@ -32,8 +32,8 @@
   body {
     background-color: var(--bg);
     color: var(--text);
-    font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, system-ui,
-      sans-serif;
+    font-family: 'Poppins', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+    font-weight: 400;
     -webkit-font-smoothing: antialiased;
     overscroll-behavior: none;
   }
@@ -48,20 +48,23 @@
 
 @layer utilities {
   .font-display {
-    font-family: 'Fraunces', Georgia, serif;
+    font-family: 'Poppins', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
     font-weight: 300;
+    letter-spacing: -0.01em;
   }
 
   .font-mono {
-    font-family: 'JetBrains Mono', monospace;
+    font-family: 'Poppins', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+    font-weight: 400;
+    letter-spacing: 0;
   }
 
   .stat-number {
-    font-family: 'Fraunces', Georgia, serif;
-    font-weight: 300;
+    font-family: 'Poppins', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+    font-weight: 200;
     font-size: clamp(72px, 20vw, 112px);
     line-height: 1;
-    letter-spacing: -0.03em;
+    letter-spacing: -0.04em;
   }
 
   .safe-bottom {
