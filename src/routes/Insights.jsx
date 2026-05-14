@@ -8,6 +8,7 @@ import {
   getSettings,
   getCigarettesByRange,
   getMoneySaved,
+  getCravingTrend,
 } from '../lib/storage'
 import { formatCurrency } from '../lib/format'
 import BottomNav from '../components/BottomNav'
@@ -40,6 +41,7 @@ export default function Insights() {
         settings,
         cigs,
         moneySaved,
+        cravingTrend,
       ] = await Promise.all([
         getHeatmapData(range),
         getWeekdayWeekendBreakdown(range),
@@ -49,6 +51,7 @@ export default function Insights() {
         getSettings(),
         getCigarettesByRange(startMs, endMs),
         getMoneySaved(range),
+        getCravingTrend(range),
       ])
 
       if (!mounted) return
@@ -68,7 +71,7 @@ export default function Insights() {
       setData({
         heatmap, weekSplit, trend, triggers, locations,
         settings, totalSmoked, totalSpent, avgPerDay,
-        dailyCost, moneySaved,
+        dailyCost, moneySaved, cravingTrend,
         currency: settings?.currency ?? 'INR',
         dailyTarget: settings?.goal === 'reduce' ? settings.dailyTarget : null,
         peakHour,
@@ -149,6 +152,13 @@ export default function Insights() {
             </Card>
           </div>
 
+          {/* ── Craving intensity trend ── */}
+          {data.cravingTrend && (
+            <Card title="Craving intensity" subtitle="avg per day — lower is better">
+              <CravingTrendChart data={data.cravingTrend} />
+            </Card>
+          )}
+
           {/* ── Cost projection ── */}
           <Card title="If nothing changes" subtitle="Projected spend">
             <ProjectionCard dailyCost={data.dailyCost} currency={data.currency} />
@@ -202,4 +212,71 @@ function formatHour(h) {
   if (h === 0) return '12 AM'
   if (h === 12) return '12 PM'
   return h < 12 ? `${h} AM` : `${h - 12} PM`
+}
+
+function CravingTrendChart({ data }) {
+  if (!data || data.length === 0) return null
+  const max = 10
+  const height = 60
+  const w = 100 / (data.length - 1 || 1)
+
+  const points = data.map((d, i) => ({
+    x: i * w,
+    y: height - (d.avg / max) * height,
+    avg: d.avg,
+  }))
+
+  const pathD = points
+    .map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`)
+    .join(' ')
+
+  const first = points[0]?.avg ?? 0
+  const last = points[points.length - 1]?.avg ?? 0
+  const delta = Math.round((last - first) * 10) / 10
+  const improving = delta < 0
+
+  return (
+    <div>
+      <svg
+        viewBox={`0 0 100 ${height}`}
+        preserveAspectRatio="none"
+        className="w-full"
+        style={{ height: 64 }}
+      >
+        <path
+          d={pathD}
+          fill="none"
+          stroke={improving ? 'var(--accent)' : 'var(--danger)'}
+          strokeWidth="1.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          vectorEffect="non-scaling-stroke"
+        />
+        {points.map((p, i) => (
+          <circle
+            key={i}
+            cx={p.x}
+            cy={p.y}
+            r="2"
+            fill={improving ? 'var(--accent)' : 'var(--danger)'}
+            vectorEffect="non-scaling-stroke"
+          />
+        ))}
+      </svg>
+      <div className="flex justify-between items-center mt-2">
+        <span className="text-[10px] font-mono" style={{ color: 'var(--dim)' }}>
+          earliest · avg {first}/10
+        </span>
+        <span
+          className="text-[10px] font-mono"
+          style={{ color: improving ? 'var(--accent)' : 'var(--danger)' }}
+        >
+          {improving ? '↓' : '↑'} {Math.abs(delta)} — {improving ? 'getting easier' : 'still building'}
+        </span>
+        <span className="text-[10px] font-mono" style={{ color: 'var(--dim)' }}>
+          recent · avg {last}/10
+        </span>
+      </div>
+    </div>
+  )
 }

@@ -50,6 +50,9 @@ export default function TodayLog({ refreshKey, onChanged }) {
 
         {open && (
           <div className="flex flex-col gap-2 mt-2">
+            <p className="text-[10px] font-mono px-1 mb-1" style={{ color: 'var(--dim)' }}>
+              tap the pencil to add trigger, mood, or location details
+            </p>
             {entries.map((e) => (
               <div
                 key={e.id}

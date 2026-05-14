@@ -30,7 +30,9 @@ function topEntry(map) {
  */
 export async function getPatternInsights() {
   const all = await getAllCigarettes()
-  if (all.length < MIN_ENTRIES) return null
+  if (all.length < MIN_ENTRIES) {
+    return { locked: true, totalEntries: all.length, needed: MIN_ENTRIES }
+  }
 
   const windowCounts = { morning: 0, afternoon: 0, evening: 0, night: 0 }
   const triggerCounts = {}
@@ -93,6 +95,6 @@ export async function getPatternInsights() {
   }
 
   return insights.length > 0
-    ? { insights: insights.slice(0, 2), totalEntries: all.length }
-    : null
+    ? { locked: false, insights: insights.slice(0, 2), totalEntries: all.length }
+    : { locked: false, insights: [], totalEntries: all.length }
 }

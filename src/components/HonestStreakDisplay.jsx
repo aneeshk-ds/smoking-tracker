@@ -48,6 +48,9 @@ export default function HonestStreakDisplay({ streak }) {
         <div className="text-[10px] font-mono mt-0.5" style={{ color: 'var(--dim)' }}>
           {nudge}
         </div>
+        <div className="text-[9px] font-mono mt-0.5" style={{ color: 'var(--dim)', opacity: 0.55 }}>
+          won't reset to zero on a slip day
+        </div>
       </div>
     )
   }
@@ -69,6 +72,9 @@ export default function HonestStreakDisplay({ streak }) {
         )}
         <div className="text-[10px] font-mono mt-0.5" style={{ color: 'var(--dim)' }}>
           {nudge}
+        </div>
+        <div className="text-[9px] font-mono mt-0.5" style={{ color: 'var(--dim)', opacity: 0.55 }}>
+          won't reset to zero on a slip day
         </div>
       </div>
     )

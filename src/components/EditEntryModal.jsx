@@ -1,10 +1,7 @@
 import { useState } from 'react'
 import { updateCigarette } from '../lib/storage'
 import { format } from 'date-fns'
-
-const TRIGGERS = ['stress', 'boredom', 'social', 'habit', 'craving', 'coffee', 'alcohol']
-const LOCATIONS = ['home', 'work', 'outside', 'car', 'bar/restaurant', 'other']
-const MOODS = ['calm', 'stressed', 'bored', 'social', 'anxious', 'happy']
+import { TRIGGERS, LOCATIONS, MOODS } from '../lib/constants'
 
 function Chip({ value, selected, onToggle }) {
   return (
@@ -85,31 +82,55 @@ export default function EditEntryModal({ entry, settings, onSave, onClose }) {
           {/* Location */}
           <div>
             <label className="text-xs font-mono block mb-2" style={{ color: 'var(--muted)' }}>Location</label>
-            <div className="flex flex-wrap gap-2">
-              {LOCATIONS.map((l) => (
-                <Chip key={l} value={l} selected={location === l} onToggle={(v) => setLocation(location === v ? null : v)} />
-              ))}
-            </div>
+            <select
+              value={location ?? ''}
+              onChange={(e) => setLocation(e.target.value || null)}
+              className="w-full px-4 py-3 rounded-xl text-sm font-mono border appearance-none"
+              style={{
+                background: 'var(--surface-2)',
+                borderColor: location ? 'var(--accent)' : 'var(--border)',
+                color: location ? 'var(--text)' : 'var(--muted)',
+              }}
+            >
+              <option value="">— select location —</option>
+              {LOCATIONS.map((l) => <option key={l} value={l}>{l}</option>)}
+            </select>
           </div>
 
           {/* Mood */}
           <div>
             <label className="text-xs font-mono block mb-2" style={{ color: 'var(--muted)' }}>Mood</label>
-            <div className="flex flex-wrap gap-2">
-              {MOODS.map((m) => (
-                <Chip key={m} value={m} selected={mood === m} onToggle={(v) => setMood(mood === v ? null : v)} />
-              ))}
-            </div>
+            <select
+              value={mood ?? ''}
+              onChange={(e) => setMood(e.target.value || null)}
+              className="w-full px-4 py-3 rounded-xl text-sm font-mono border appearance-none"
+              style={{
+                background: 'var(--surface-2)',
+                borderColor: mood ? 'var(--accent)' : 'var(--border)',
+                color: mood ? 'var(--text)' : 'var(--muted)',
+              }}
+            >
+              <option value="">— select mood —</option>
+              {MOODS.map((m) => <option key={m} value={m}>{m}</option>)}
+            </select>
           </div>
 
           {/* Trigger */}
           <div>
             <label className="text-xs font-mono block mb-2" style={{ color: 'var(--muted)' }}>Trigger</label>
-            <div className="flex flex-wrap gap-2">
-              {TRIGGERS.map((t) => (
-                <Chip key={t} value={t} selected={trigger === t} onToggle={(v) => setTrigger(trigger === v ? null : v)} />
-              ))}
-            </div>
+            <select
+              value={trigger ?? ''}
+              onChange={(e) => setTrigger(e.target.value || null)}
+              className="w-full px-4 py-3 rounded-xl text-sm font-mono border appearance-none"
+              style={{
+                background: 'var(--surface-2)',
+                borderColor: trigger ? 'var(--accent)' : 'var(--border)',
+                color: trigger ? 'var(--text)' : 'var(--muted)',
+              }}
+            >
+              <option value="">— select trigger —</option>
+              {TRIGGERS.map((t) => <option key={t} value={t}>{t}</option>)}
+            </select>
           </div>
 
           {/* Craving */}

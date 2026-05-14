@@ -377,6 +377,53 @@ export async function getMonthSnapshot() {
   return { thisMonth, lastMonth }
 }
 
+// ---- Smoke-free rate ----
+
+export async function getSmokeFreeRate(days = 30) {
+  const settings = await getSettings()
+  const goal = settings?.goal ?? 'awareness'
+  const dailyTarget = settings?.dailyTarget ?? null
+  if (goal === 'awareness') return null
+
+  const stats = await getStatsByRange(days)
+  if (stats.length < 3) return null
+
+  let smokeFree = 0
+  for (const s of stats) {
+    if (goal === 'quit' && s.count === 0) smokeFree++
+    else if (goal === 'reduce' && dailyTarget !== null && s.count <= dailyTarget) smokeFree++
+  }
+
+  return {
+    smokeFree,
+    total: stats.length,
+    rate: Math.round((smokeFree / stats.length) * 100),
+  }
+}
+
+// ---- Craving intensity trend ----
+
+export async function getCravingTrend(days = 30) {
+  const endMs = Date.now()
+  const startMs = endMs - days * 24 * 60 * 60 * 1000
+  const rows = await getCigarettesByRange(startMs, endMs)
+
+  const byDate = {}
+  for (const r of rows) {
+    if (r.craving == null) continue
+    const d = dateStr(r.timestamp)
+    if (!byDate[d]) byDate[d] = { sum: 0, count: 0 }
+    byDate[d].sum += r.craving
+    byDate[d].count++
+  }
+
+  const series = Object.entries(byDate)
+    .map(([date, { sum, count }]) => ({ date, avg: Math.round((sum / count) * 10) / 10 }))
+    .sort((a, b) => a.date.localeCompare(b.date))
+
+  return series.length >= 3 ? series : null
+}
+
 // ---- All entries (for pattern analysis) ----
 
 export async function getAllCigarettes() {

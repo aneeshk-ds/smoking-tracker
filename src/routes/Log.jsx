@@ -2,10 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { logCigarette, getSettings } from '../lib/storage'
 import { useEffect } from 'react'
-
-const MOODS = ['calm', 'stressed', 'bored', 'social', 'anxious', 'happy']
-const TRIGGERS = ['stress', 'boredom', 'social', 'habit', 'craving', 'coffee', 'alcohol']
-const LOCATIONS = ['home', 'work', 'outside', 'car', 'bar/restaurant', 'other']
+import { TRIGGERS, LOCATIONS, MOODS } from '../lib/constants'
 
 export default function Log() {
   const navigate = useNavigate()
@@ -102,64 +99,58 @@ export default function Log() {
         {/* Location */}
         <div>
           <label className="text-muted text-xs font-mono block mb-2">Location (optional)</label>
-          <div className="flex flex-wrap gap-2">
-            {LOCATIONS.map((l) => (
-              <button
-                key={l}
-                type="button"
-                onClick={() => setLocation(location === l ? null : l)}
-                className={`px-3 py-2 rounded-xl text-xs font-mono border transition-all ${
-                  location === l
-                    ? 'border-accent bg-accent-dim text-accent'
-                    : 'border-border bg-surface-2 text-muted'
-                }`}
-              >
-                {l}
-              </button>
-            ))}
-          </div>
+          <select
+            value={location ?? ''}
+            onChange={(e) => setLocation(e.target.value || null)}
+            className="w-full px-4 py-3 rounded-xl text-sm font-mono border appearance-none"
+            style={{
+              background: 'var(--surface-2)',
+              borderColor: location ? 'var(--accent)' : 'var(--border)',
+              color: location ? 'var(--text)' : 'var(--muted)',
+            }}
+          >
+            <option value="">— select location —</option>
+            {LOCATIONS.map((l) => <option key={l} value={l}>{l}</option>)}
+          </select>
         </div>
 
         {/* Mood */}
         <div>
           <label className="text-muted text-xs font-mono block mb-2">Mood (optional)</label>
-          <div className="flex flex-wrap gap-2">
-            {MOODS.map((m) => (
-              <button
-                key={m}
-                type="button"
-                onClick={() => setMood(mood === m ? null : m)}
-                className={`px-3 py-2 rounded-xl text-xs font-mono border transition-all ${
-                  mood === m
-                    ? 'border-accent bg-accent-dim text-accent'
-                    : 'border-border bg-surface-2 text-muted'
-                }`}
-              >
-                {m}
-              </button>
-            ))}
-          </div>
+          <select
+            value={mood ?? ''}
+            onChange={(e) => setMood(e.target.value || null)}
+            className="w-full px-4 py-3 rounded-xl text-sm font-mono border appearance-none"
+            style={{
+              background: 'var(--surface-2)',
+              borderColor: mood ? 'var(--accent)' : 'var(--border)',
+              color: mood ? 'var(--text)' : 'var(--muted)',
+            }}
+          >
+            <option value="">— select mood —</option>
+            {MOODS.map((m) => <option key={m} value={m}>{m}</option>)}
+          </select>
         </div>
 
         {/* Trigger */}
         <div>
           <label className="text-muted text-xs font-mono block mb-2">Trigger (optional)</label>
-          <div className="flex flex-wrap gap-2">
-            {TRIGGERS.map((t) => (
-              <button
-                key={t}
-                type="button"
-                onClick={() => setTrigger(trigger === t ? null : t)}
-                className={`px-3 py-2 rounded-xl text-xs font-mono border transition-all ${
-                  trigger === t
-                    ? 'border-accent bg-accent-dim text-accent'
-                    : 'border-border bg-surface-2 text-muted'
-                }`}
-              >
-                {t}
-              </button>
-            ))}
-          </div>
+          <select
+            value={trigger ?? ''}
+            onChange={(e) => setTrigger(e.target.value || null)}
+            className="w-full px-4 py-3 rounded-xl text-sm font-mono border appearance-none"
+            style={{
+              background: 'var(--surface-2)',
+              borderColor: trigger ? 'var(--accent)' : 'var(--border)',
+              color: trigger ? 'var(--text)' : 'var(--muted)',
+            }}
+          >
+            <option value="">— select trigger —</option>
+            {TRIGGERS.map((t) => <option key={t} value={t}>{t}</option>)}
+          </select>
+          <p className="text-[10px] font-mono mt-1.5" style={{ color: 'var(--dim)' }}>
+            filling this in helps surface your smoking patterns over time
+          </p>
         </div>
 
         {/* Craving */}

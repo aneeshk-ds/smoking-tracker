@@ -9,6 +9,17 @@ const GOALS = [
   { key: 'quit', label: 'Quit', desc: 'Track progress toward zero.' },
 ]
 
+const WHY_OPTIONS = [
+  { key: 'family',  label: 'My family' },
+  { key: 'health',  label: 'My health' },
+  { key: 'partner', label: 'My partner' },
+  { key: 'child',   label: 'My child' },
+  { key: 'money',   label: 'Save money' },
+  { key: 'fitness', label: 'Improve fitness' },
+  { key: 'control', label: 'Feel in control' },
+  { key: 'doctor',  label: 'Doctor advised' },
+]
+
 const CURRENCIES = ['INR', 'USD', 'EUR', 'GBP']
 
 export default function Onboarding({ onComplete }) {
@@ -22,6 +33,7 @@ export default function Onboarding({ onComplete }) {
   const [perPack, setPerPack] = useState(20)
   const [singlePrice, setSinglePrice] = useState('')
   const [purchaseType, setPurchaseType] = useState('pack')
+  const [quitReason, setQuitReason] = useState(null)
   const [saving, setSaving] = useState(false)
 
   const isINR = currency === 'INR'
@@ -64,6 +76,7 @@ export default function Onboarding({ onComplete }) {
       lastBackupAt: null,
       onboardedAt: Date.now(),
       baselineDailyAvg: null,
+      quitReason: quitReason ?? null,
     })
     onComplete()
   }
@@ -280,13 +293,56 @@ export default function Onboarding({ onComplete }) {
       </button>
     </div>,
 
-    // Step 4: Done
+    // Step 4: Why are you quitting?
+    <div key="why" className="flex flex-col gap-6">
+      <div>
+        <h2 className="font-display text-2xl text-text">Why do you want to quit?</h2>
+        <p className="text-muted text-xs font-mono mt-2">Your reason will appear in your progress messages. Skip if you prefer.</p>
+      </div>
+      <div className="grid grid-cols-2 gap-2">
+        {WHY_OPTIONS.map((w) => (
+          <button
+            key={w.key}
+            type="button"
+            onClick={() => setQuitReason(quitReason === w.key ? null : w.key)}
+            className="text-left px-4 py-3 rounded-2xl border transition-all duration-150"
+            style={{
+              borderColor: quitReason === w.key ? 'var(--accent)' : 'var(--border)',
+              background: quitReason === w.key ? 'var(--accent-dim)' : 'var(--surface-2)',
+              color: quitReason === w.key ? 'var(--accent)' : 'var(--muted)',
+            }}
+          >
+            <span className="font-mono text-sm">{w.label}</span>
+          </button>
+        ))}
+      </div>
+      <button
+        onClick={() => setStep(5)}
+        className="w-full py-4 bg-accent text-bg rounded-2xl font-sans font-medium text-base"
+      >
+        {quitReason ? 'Continue' : 'Skip'}
+      </button>
+    </div>,
+
+    // Step 5: Done
     <div key="done" className="flex flex-col gap-8">
       <div>
         <h2 className="font-display text-3xl text-text">You're set.</h2>
         <p className="text-muted text-sm mt-3 font-mono leading-relaxed">
-          Tap the green button when you smoke. Everything else is optional.
+          A few things worth knowing:
         </p>
+        <div className="mt-4 flex flex-col gap-3">
+          {[
+            { dot: 'var(--accent)', text: 'Tap the button to log. Hold it to add trigger, mood, and location details.' },
+            { dot: 'var(--accent)', text: 'Trigger details unlock your pattern insights — your most common trigger, peak risk window, and more.' },
+            { dot: 'var(--accent)', text: 'Your momentum streak never resets to zero on a slip. One rough day doesn\'t erase your progress.' },
+          ].map(({ dot, text }, i) => (
+            <div key={i} className="flex items-start gap-3">
+              <div className="w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0" style={{ background: dot }} />
+              <p className="text-muted text-xs font-mono leading-relaxed">{text}</p>
+            </div>
+          ))}
+        </div>
       </div>
       <button
         onClick={handleFinish}
@@ -302,7 +358,7 @@ export default function Onboarding({ onComplete }) {
     <div className="min-h-screen bg-bg flex flex-col justify-between px-6 py-12 max-w-md mx-auto">
       {/* Progress dots */}
       <div className="flex gap-1.5 mb-8">
-        {[0, 1, 2, 3, 4].filter((i) => !(i === 2 && goal !== 'reduce')).map((i) => {
+        {[0, 1, 2, 3, 4, 5].filter((i) => !(i === 2 && goal !== 'reduce')).map((i) => {
           const actualStep = goal !== 'reduce' && i >= 2 ? i + 1 : i
           return (
             <div
