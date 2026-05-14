@@ -19,6 +19,7 @@ import InstallBanner from '../components/InstallBanner'
 import BackupBanner from '../components/BackupBanner'
 import WeekMonthSnapshot from '../components/WeekMonthSnapshot'
 import TodayLog from '../components/TodayLog'
+import InsightCard from '../components/InsightCard'
 
 const GOAL_LABEL = { awareness: 'AWARE', reduce: 'REDUCE', quit: 'QUIT' }
 
@@ -90,6 +91,9 @@ export default function Home() {
 
         {/* Week / Month snapshot */}
         <WeekMonthSnapshot key={refreshKey} />
+
+        {/* Pattern insights — appears after 7+ entries, computed on-device */}
+        <InsightCard refreshKey={refreshKey} />
 
         {/* Secondary stats */}
         <div className="mb-8 border-t border-border pt-4">

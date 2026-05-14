@@ -377,6 +377,12 @@ export async function getMonthSnapshot() {
   return { thisMonth, lastMonth }
 }
 
+// ---- All entries (for pattern analysis) ----
+
+export async function getAllCigarettes() {
+  return db.cigarettes.orderBy('timestamp').toArray()
+}
+
 // ---- Today's entries ----
 
 export async function getTodayEntries() {

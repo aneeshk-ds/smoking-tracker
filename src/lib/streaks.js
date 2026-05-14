@@ -57,10 +57,24 @@ export function computeHonestStreak(allStats, settings) {
       if (stat && stat.count > dailyTarget) slipsInLast30++
     }
 
+    // How long was the run before today's slip
+    let previousRun = 0
+    if (isOnTrackToday === false) {
+      for (let i = 1; i < 365; i++) {
+        const d = dateStr(subDays(today, i))
+        const stat = statsMap[d]
+        if (!stat) break
+        if (stat.count <= dailyTarget) previousRun++
+        else break
+      }
+    }
+
     // Nudge language
     let nudge
     if (isOnTrackToday === false) {
-      nudge = 'keep going — tomorrow counts'
+      nudge = previousRun > 0
+        ? `${previousRun} good day${previousRun !== 1 ? 's' : ''} before this — that progress stands`
+        : 'keep going — tomorrow is a fresh start'
     } else if (currentRun === 0) {
       nudge = 'start your run today'
     } else if (currentRun >= bestRun && bestRun > 1) {
@@ -111,9 +125,26 @@ export function computeHonestStreak(allStats, settings) {
     const personalBest = computePersonalBest(allStats)
     const isCleanToday = !statsMap[todayStr] || statsMap[todayStr].count === 0
 
+    // How many clean days immediately before today's slip
+    let cleanBeforeSlip = 0
+    if (!isCleanToday) {
+      for (let i = 1; i < 365; i++) {
+        const d = dateStr(subDays(today, i))
+        const stat = statsMap[d]
+        if (!stat || stat.count === 0) {
+          if (!stat) break // no record = no data, stop counting
+          cleanBeforeSlip++
+        } else {
+          break
+        }
+      }
+    }
+
     let nudge
     if (!isCleanToday) {
-      nudge = 'keep going — the run restarts now'
+      nudge = cleanBeforeSlip > 0
+        ? `${cleanBeforeSlip} clean day${cleanBeforeSlip !== 1 ? 's' : ''} before this — one slip is data, not failure`
+        : 'every hour without one counts — restart from here'
     } else if (daysSince >= personalBest && personalBest > 1) {
       nudge = 'personal best — you\'re doing it'
     } else if (daysSince > 0) {
