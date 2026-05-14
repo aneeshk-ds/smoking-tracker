@@ -8,6 +8,7 @@ import {
   getProjectedCost,
   getSettings,
 } from '../lib/storage'
+import { performBackup } from '../lib/backup'
 import { formatCurrency } from '../lib/format'
 import BottomNav from '../components/BottomNav'
 import LogButton from '../components/LogButton'
@@ -16,6 +17,8 @@ import HonestStreakDisplay from '../components/HonestStreakDisplay'
 import EquivalentLine from '../components/EquivalentLine'
 import InstallBanner from '../components/InstallBanner'
 import BackupBanner from '../components/BackupBanner'
+import WeekMonthSnapshot from '../components/WeekMonthSnapshot'
+import TodayLog from '../components/TodayLog'
 
 const GOAL_LABEL = { awareness: 'AWARE', reduce: 'REDUCE', quit: 'QUIT' }
 
@@ -40,7 +43,11 @@ export default function Home() {
     load()
   }, [load, refreshKey])
 
-  const handleLogged = () => setRefreshKey((k) => k + 1)
+  const handleLogged = useCallback(() => {
+    setRefreshKey((k) => k + 1)
+    // Fire-and-forget auto-backup after each log
+    performBackup().catch(() => {})
+  }, [])
 
   if (!data) {
     return (
@@ -81,6 +88,9 @@ export default function Home() {
           </div>
         </div>
 
+        {/* Week / Month snapshot */}
+        <WeekMonthSnapshot key={refreshKey} />
+
         {/* Secondary stats */}
         <div className="mb-8 border-t border-border pt-4">
           <StatBlock
@@ -88,7 +98,7 @@ export default function Home() {
             value={formatCurrency(spend, currency)}
           />
           <StatBlock
-            label="Streak"
+            label="Momentum"
             value={<HonestStreakDisplay streak={streak} />}
           />
           <StatBlock
@@ -108,6 +118,9 @@ export default function Home() {
         <p className="text-dim text-xs font-mono text-center">
           hold to add details
         </p>
+
+        {/* Today's log */}
+        <TodayLog refreshKey={refreshKey} onChanged={handleLogged} />
       </div>
 
       <BottomNav />

@@ -1,5 +1,5 @@
 import Dexie from 'dexie'
-import { format, startOfDay, endOfDay, isWeekend } from 'date-fns'
+import { format, startOfDay, endOfDay, isWeekend, subDays, startOfMonth, endOfMonth, subMonths } from 'date-fns'
 import { computeHonestStreak } from './streaks'
 
 const db = new Dexie('TrackerDB')
@@ -329,6 +329,65 @@ export async function deleteAllData() {
   await db.cigarettes.clear()
   await db.dayStats.clear()
   await db.settings.clear()
+}
+
+// ---- Week / Month snapshots ----
+
+export async function getWeekCount(offsetWeeks = 0) {
+  const today = new Date()
+  const dayOfWeek = today.getDay()
+  const daysSinceMonday = (dayOfWeek + 6) % 7
+
+  if (offsetWeeks === 0) {
+    const startMs = startOfDay(subDays(today, daysSinceMonday)).getTime()
+    const rows = await getCigarettesByRange(startMs, Date.now())
+    return rows.length
+  } else {
+    const lastSunday = subDays(today, daysSinceMonday + 1)
+    const lastMonday = subDays(lastSunday, 6)
+    const startMs = startOfDay(lastMonday).getTime()
+    const endMs = endOfDay(lastSunday).getTime()
+    const rows = await getCigarettesByRange(startMs, endMs)
+    return rows.length
+  }
+}
+
+export async function getMonthCount(offsetMonths = 0) {
+  const today = new Date()
+  if (offsetMonths === 0) {
+    const startMs = startOfMonth(today).getTime()
+    const rows = await getCigarettesByRange(startMs, Date.now())
+    return rows.length
+  } else {
+    const target = subMonths(today, offsetMonths)
+    const startMs = startOfMonth(target).getTime()
+    const endMs = endOfMonth(target).getTime()
+    const rows = await getCigarettesByRange(startMs, endMs)
+    return rows.length
+  }
+}
+
+export async function getWeekSnapshot() {
+  const [thisWeek, lastWeek] = await Promise.all([getWeekCount(0), getWeekCount(1)])
+  return { thisWeek, lastWeek }
+}
+
+export async function getMonthSnapshot() {
+  const [thisMonth, lastMonth] = await Promise.all([getMonthCount(0), getMonthCount(1)])
+  return { thisMonth, lastMonth }
+}
+
+// ---- Today's entries ----
+
+export async function getTodayEntries() {
+  const today = dateStr(Date.now())
+  const start = startOfDay(new Date(today)).getTime()
+  const end = endOfDay(new Date(today)).getTime()
+  return db.cigarettes
+    .where('timestamp')
+    .between(start, end, true, true)
+    .reverse()
+    .toArray()
 }
 
 // ---- Helpers ----

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { isFSASupported, pickBackupFolder, disableBackup, performBackup } from '../lib/backup'
 import {
   getSettings,
   updateSettings,
@@ -55,6 +56,11 @@ export default function Settings() {
   // Backup reminder toggle
   const [backupReminder, setBackupReminderState] = useState(() => isBackupReminderEnabled())
 
+  // Auto folder backup
+  const [autoBackupEnabled, setAutoBackupEnabled] = useState(false)
+  const [lastBackupAt, setLastBackupAt] = useState(null)
+  const [backupStatus, setBackupStatus] = useState(null) // null | 'ok' | 'err'
+
   // Share / report generating state
   const [generating, setGenerating] = useState(false)
 
@@ -77,6 +83,8 @@ export default function Settings() {
       setPendingTarget(merged.dailyTarget ?? 5)
       setPendingBrand(merged.defaultBrand)
       setPendingPurchaseType(merged.defaultPurchaseType)
+      if (s?.backupEnabled) setAutoBackupEnabled(true)
+      if (s?.lastBackupAt) setLastBackupAt(s.lastBackupAt)
     })
   }, [])
 
@@ -217,6 +225,40 @@ export default function Settings() {
   function toggleBackupReminder(val) {
     setBackupReminder(val)
     setBackupReminderState(val)
+  }
+
+  async function handleEnableAutoBackup() {
+    try {
+      await pickBackupFolder()
+      setAutoBackupEnabled(true)
+      setBackupStatus(null)
+      // Run first backup immediately
+      const ok = await performBackup(true)
+      if (ok) {
+        setLastBackupAt(Date.now())
+        setBackupStatus('ok')
+      }
+    } catch (e) {
+      if (e?.name !== 'AbortError') setBackupStatus('err')
+    }
+  }
+
+  async function handleDisableAutoBackup() {
+    await disableBackup()
+    setAutoBackupEnabled(false)
+    setLastBackupAt(null)
+    setBackupStatus(null)
+  }
+
+  async function handleManualBackupNow() {
+    setBackupStatus(null)
+    const ok = await performBackup(true)
+    if (ok) {
+      setLastBackupAt(Date.now())
+      setBackupStatus('ok')
+    } else {
+      setBackupStatus('err')
+    }
   }
 
   async function handleImport(e) {
@@ -467,6 +509,56 @@ export default function Settings() {
               {importMsg}
             </div>
           )}
+
+          {/* Auto folder backup */}
+          <div
+            className="pt-3 mt-1"
+            style={{ borderTop: '1px solid var(--border)' }}
+          >
+            <div className="flex items-center justify-between mb-2">
+              <div>
+                <span className="text-muted text-xs font-mono">Auto-backup to folder</span>
+                {lastBackupAt && (
+                  <div className="text-[10px] font-mono mt-0.5" style={{ color: 'var(--dim)' }}>
+                    last: {new Date(lastBackupAt).toLocaleDateString()}
+                  </div>
+                )}
+              </div>
+              <Toggle value={autoBackupEnabled} onChange={(v) => v ? handleEnableAutoBackup() : handleDisableAutoBackup()} />
+            </div>
+
+            {autoBackupEnabled && isFSASupported() && (
+              <div className="flex gap-2">
+                <button
+                  onClick={handleManualBackupNow}
+                  className="flex-1 py-2 rounded-xl text-xs font-mono border"
+                  style={{ borderColor: 'var(--border)', background: 'var(--surface-2)', color: 'var(--muted)' }}
+                >
+                  Backup now
+                </button>
+                <button
+                  onClick={handleEnableAutoBackup}
+                  className="flex-1 py-2 rounded-xl text-xs font-mono border"
+                  style={{ borderColor: 'var(--border)', background: 'var(--surface-2)', color: 'var(--muted)' }}
+                >
+                  Change folder
+                </button>
+              </div>
+            )}
+
+            {!isFSASupported() && (
+              <p className="text-[10px] font-mono mt-1" style={{ color: 'var(--dim)' }}>
+                Folder backup requires Chrome or Edge. Use Export JSON on Safari.
+              </p>
+            )}
+
+            {backupStatus === 'ok' && (
+              <p className="text-[10px] font-mono mt-1" style={{ color: 'var(--accent)' }}>Backup saved.</p>
+            )}
+            {backupStatus === 'err' && (
+              <p className="text-[10px] font-mono mt-1" style={{ color: 'var(--danger)' }}>Backup failed. Check folder permissions.</p>
+            )}
+          </div>
 
           {/* Backup reminder toggle */}
           <div
