@@ -1,16 +1,37 @@
 # Smoking Tracker
 
+**Live app →** https://aneeshk-ds.github.io/smoking-tracker/
+
 A private, offline-first PWA for tracking a smoking habit. No accounts. No cloud. All data stays on the device.
+
+---
+
+## What it does
+
+- Log cigarettes with one tap (long-press for details: trigger, location, mood, craving level)
+- Honest streaks that never reset to zero on a slip
+- Home screen insights: spending, 10-year cost projection, smoke-free rate, pattern card
+- Insights tab: heatmap, daily trend, weekday/weekend split, trigger + location breakdown, craving intensity trend, cost projection
+- Craving support: 10-minute delay timer + 4-4-4 breathing exercise
+- Lapse recovery prompt when goal is exceeded — shows previous run and personal reason
+- Health milestones: WHO/CDC recovery timeline with live elapsed timer
+- Monthly report (print to PDF)
+- Share card (PNG for social)
+- JSON/CSV export and import
+- PWA — installable on iOS and Android, works fully offline
 
 ---
 
 ## Stack
 
-- React 18 + Vite 5
-- Tailwind CSS v3 (custom dark theme)
-- Dexie.js (IndexedDB — all storage is local)
-- Recharts (data visualisation)
-- date-fns
+| Layer | Library |
+|---|---|
+| UI | React 18 + Vite 5 |
+| Styling | Tailwind CSS v3 (custom CSS variable dark theme) |
+| Storage | Dexie.js v3 (IndexedDB — everything stays on device) |
+| Charts | Recharts |
+| Dates | date-fns |
+| Deploy | GitHub Actions → GitHub Pages |
 
 ---
 
@@ -21,57 +42,31 @@ npm install
 npm run dev
 ```
 
-Open `http://localhost:5173` in your browser.
+Open `http://localhost:5173`.
 
 ---
 
-## Build
+## Deploy
 
-```bash
-npm run build
-npm run preview
-```
-
----
-
-## Deploy to GitHub Pages
-
-1. Create a new GitHub repository and push this folder to the `main` branch.
-2. In the repo settings, go to **Pages → Source** and select **GitHub Actions**.
-3. Push any commit to `main`. The workflow in `.github/workflows/deploy.yml` runs automatically and deploys to:
+Push to `main`. The GitHub Actions workflow in `.github/workflows/deploy.yml` builds and deploys automatically:
 
 ```
 https://<your-username>.github.io/<repo-name>/
 ```
 
-The workflow sets `VITE_BASE` to `/<repo-name>/` at build time so all asset paths resolve correctly.
-
 ---
 
 ## Add to Home Screen
 
-**iOS (Safari):** Open the app, tap the Share button, then tap "Add to Home Screen".
+**iOS (Safari):** Share → Add to Home Screen
 
-**Android (Chrome):** Open the app, tap the menu button, then tap "Add to Home Screen" or "Install App".
+**Android (Chrome):** Menu → Add to Home Screen / Install App
 
 ---
 
 ## Privacy
 
-- Zero data leaves the device. Ever.
-- No analytics, no tracking, no ads.
-- All entries are stored in the browser's IndexedDB.
-- Use Settings → Export JSON to back up your data locally.
-
----
-
-## Features
-
-- Log cigarettes with one tap (long-press for details: brand, location, trigger, craving level)
-- Honest streaks — no reset to zero on a slip
-- Insights: heatmap, trend chart, weekday/weekend split, trigger breakdown, cost projection
-- Health milestones: WHO/CDC recovery timeline with live elapsed timer
-- Monthly report (browser print → Save as PDF)
-- Share card (1080x1350 PNG for Instagram)
-- JSON/CSV export and import
-- PWA — installable, works offline after first load
+- Zero data leaves the device
+- No analytics, no tracking, no ads
+- All entries stored in the browser's IndexedDB
+- Settings → Export JSON to back up locally
