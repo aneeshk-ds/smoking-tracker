@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { format } from 'date-fns'
 import { useNavigate } from 'react-router-dom'
 import {
@@ -8,21 +8,19 @@ import {
   getProjectedCost,
   getSettings,
   getSmokeFreeRate,
+  logCigarette,
 } from '../lib/storage'
 import { performBackup } from '../lib/backup'
 import { formatCurrency } from '../lib/format'
 import BottomNav from '../components/BottomNav'
-import LogButton from '../components/LogButton'
-import StatBlock from '../components/StatBlock'
-import HonestStreakDisplay from '../components/HonestStreakDisplay'
-import EquivalentLine from '../components/EquivalentLine'
+import BreathingOrb from '../components/BreathingOrb'
+import StreakDisplay from '../components/StreakDisplay'
+import InsightCard from '../components/InsightCard'
 import InstallBanner from '../components/InstallBanner'
 import BackupBanner from '../components/BackupBanner'
-import WeekMonthSnapshot from '../components/WeekMonthSnapshot'
-import TodayLog from '../components/TodayLog'
-import InsightCard from '../components/InsightCard'
 import LapseRecoveryModal from '../components/LapseRecoveryModal'
 import CravingModal from '../components/CravingModal'
+import TodayLog from '../components/TodayLog'
 
 const GOAL_LABEL = { awareness: 'AWARE', reduce: 'REDUCE', quit: 'QUIT' }
 
@@ -34,15 +32,85 @@ const REASON_PHRASE = {
   money:   'to save money',
   fitness: 'for your fitness',
   control: 'to feel in control',
-  doctor:  'on doctor\'s advice',
+  doctor:  "on doctor's advice",
+}
+
+function computeOrbStatus(count, goal, dailyTarget) {
+  if (goal === 'quit') return count === 0 ? 'good' : 'warning'
+  if (goal === 'reduce' && dailyTarget !== null) return count <= dailyTarget ? 'good' : 'warning'
+  return 'neutral'
+}
+
+function QuickLogButton({ onLogged, onLongPress, saving }) {
+  const holdRef = useRef(null)
+
+  const startHold = () => {
+    holdRef.current = setTimeout(() => {
+      clearTimeout(holdRef.current)
+      holdRef.current = null
+      onLongPress()
+    }, 550)
+  }
+  const cancelHold = () => {
+    if (holdRef.current) {
+      clearTimeout(holdRef.current)
+      holdRef.current = null
+    }
+  }
+
+  return (
+    <div className="flex flex-col items-center gap-2">
+      <button
+        onMouseDown={startHold}
+        onMouseUp={cancelHold}
+        onMouseLeave={cancelHold}
+        onTouchStart={startHold}
+        onTouchEnd={cancelHold}
+        onTouchCancel={cancelHold}
+        onClick={!saving ? onLogged : undefined}
+        disabled={saving}
+        className="w-full py-4 rounded-2xl text-base font-bold tracking-wide transition-all active:scale-95 disabled:opacity-60"
+        style={{
+          background: 'var(--accent)',
+          color: '#0D1420',
+          boxShadow: '0 4px 24px rgba(232,168,56,0.32)',
+        }}
+      >
+        {saving ? 'Logging...' : '+ Log a cigarette'}
+      </button>
+      <p className="text-xs font-normal" style={{ color: 'var(--dim)' }}>
+        hold to add brand, mood, or trigger
+      </p>
+    </div>
+  )
+}
+
+function StatPill({ label, value, valueColor }) {
+  return (
+    <div
+      className="flex flex-col items-center justify-center px-3 py-3 rounded-2xl flex-1"
+      style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}
+    >
+      <span
+        className="text-base font-bold leading-tight"
+        style={{ color: valueColor ?? 'var(--text)' }}
+      >
+        {value}
+      </span>
+      <span className="text-xs font-normal mt-0.5 text-center" style={{ color: 'var(--muted)' }}>
+        {label}
+      </span>
+    </div>
+  )
 }
 
 export default function Home() {
   const navigate = useNavigate()
-  const [data, setData] = useState(null)
+  const [data, setData]             = useState(null)
   const [refreshKey, setRefreshKey] = useState(0)
-  const [showLapse, setShowLapse] = useState(false)
-  const [lapseInfo, setLapseInfo] = useState(null)
+  const [saving, setSaving]         = useState(false)
+  const [showLapse, setShowLapse]   = useState(false)
+  const [lapseInfo, setLapseInfo]   = useState(null)
   const [showCraving, setShowCraving] = useState(false)
 
   const load = useCallback(async () => {
@@ -54,143 +122,143 @@ export default function Home() {
       getSettings(),
       getSmokeFreeRate(30),
     ])
-    const currency = settings?.currency ?? 'INR'
-    setData({ count, spend, streak, projected, currency, settings, smokeFreeRate })
+    setData({ count, spend, streak, projected, settings, smokeFreeRate })
   }, [])
 
-  useEffect(() => {
-    load()
-  }, [load, refreshKey])
+  useEffect(() => { load() }, [load, refreshKey])
 
   const handleLogged = useCallback(async () => {
+    setSaving(false)
     setRefreshKey((k) => k + 1)
     performBackup().catch(() => {})
 
-    // Check if this log tipped the day into a slip
     const [count, settings] = await Promise.all([getTodayCount(), getSettings()])
-    const goal = settings?.goal ?? 'awareness'
+    const goal        = settings?.goal ?? 'awareness'
     const dailyTarget = settings?.dailyTarget ?? null
     const isFirstSlip =
       (goal === 'quit' && count === 1) ||
       (goal === 'reduce' && dailyTarget !== null && count === dailyTarget + 1)
 
     if (isFirstSlip) {
-      // Compute previous run for the recovery message
-      const streak = await getCurrentStreakHonest()
-      const previousRun =
-        goal === 'reduce'
-          ? (streak?.currentRun ?? 0)
-          : (streak?.daysSinceLast ?? 0)
-
-      setLapseInfo({
-        previousRun,
-        goal,
-        quitReason: settings?.quitReason ?? null,
-      })
+      const streak      = await getCurrentStreakHonest()
+      const previousRun = goal === 'reduce'
+        ? (streak?.currentRun ?? 0)
+        : (streak?.daysSinceLast ?? 0)
+      setLapseInfo({ previousRun, goal, quitReason: settings?.quitReason ?? null })
       setShowLapse(true)
     }
   }, [])
 
+  const handleQuickLog = useCallback(async () => {
+    if (saving) return
+    setSaving(true)
+    try {
+      await logCigarette()
+      await handleLogged()
+    } catch {
+      setSaving(false)
+    }
+  }, [saving, handleLogged])
+
   if (!data) {
     return (
-      <div className="flex items-center justify-center h-screen bg-bg">
-        <div className="w-2 h-2 rounded-full bg-accent animate-pulse" />
+      <div className="flex items-center justify-center h-screen" style={{ background: 'var(--bg)' }}>
+        <div className="w-2.5 h-2.5 rounded-full animate-pulse" style={{ background: 'var(--accent)' }} />
       </div>
     )
   }
 
-  const { count, spend, streak, projected, currency, settings, smokeFreeRate } = data
-  const goal = settings?.goal ?? 'awareness'
-  const quitReason = settings?.quitReason ?? null
-  const today = new Date()
-  const dateLabel = format(today, 'EEE · d MMM')
+  const { count, spend, streak, projected, settings, smokeFreeRate } = data
+  const goal        = settings?.goal ?? 'awareness'
+  const dailyTarget = settings?.dailyTarget ?? null
+  const quitReason  = settings?.quitReason ?? null
+  const currency    = settings?.currency ?? 'INR'
+  const orbStatus   = computeOrbStatus(count, goal, dailyTarget)
+  const dateLabel   = format(new Date(), 'EEE, d MMM')
 
   return (
-    <div className="min-h-screen bg-bg flex flex-col pb-24">
+    <div className="min-h-screen flex flex-col pb-28" style={{ background: 'var(--bg)' }}>
       <InstallBanner />
       <BackupBanner />
-      <div className="flex-1 px-6 pt-10 max-w-md mx-auto w-full">
 
-        {/* Header row */}
-        <div className="flex items-center justify-between mb-10">
-          <span className="text-muted text-xs font-mono tracking-wide">{dateLabel}</span>
-          <span
-            className="text-xs font-mono tracking-widest px-2 py-1 rounded-md border"
-            style={{ borderColor: 'var(--border)', color: 'var(--muted)' }}
-          >
-            {GOAL_LABEL[goal] ?? 'TRACK'}
+      <div className="flex-1 px-5 pt-8 max-w-md mx-auto w-full flex flex-col gap-5">
+
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <span className="text-sm font-normal" style={{ color: 'var(--muted)' }}>
+            {dateLabel}
           </span>
-        </div>
-
-        {/* Primary stat */}
-        <div className="mb-8">
-          <div className="text-muted text-xs font-mono tracking-widest uppercase mb-1">Today</div>
-          <div className="stat-number text-text">{count}</div>
-          <div className="text-muted text-sm font-mono mt-1">
-            cigarette{count !== 1 ? 's' : ''}
+          <div className="flex items-center gap-2">
+            {quitReason && REASON_PHRASE[quitReason] && (
+              <span className="text-xs font-normal" style={{ color: 'var(--dim)' }}>
+                {REASON_PHRASE[quitReason]}
+              </span>
+            )}
+            <span
+              className="text-xs font-bold tracking-widest px-2.5 py-1 rounded-lg"
+              style={{
+                background: 'var(--surface-2)',
+                color: 'var(--muted)',
+                border: '1px solid var(--border)',
+              }}
+            >
+              {GOAL_LABEL[goal] ?? 'TRACK'}
+            </span>
           </div>
         </div>
 
-        {/* Week / Month snapshot */}
-        <WeekMonthSnapshot key={refreshKey} />
-
-        {/* Pattern insights */}
-        <InsightCard refreshKey={refreshKey} />
-
-        {/* Secondary stats */}
-        <div className="mb-8 border-t border-border pt-4">
-          <StatBlock
-            label="Spent today"
-            value={formatCurrency(spend, currency)}
+        {/* Breathing orb */}
+        <div className="flex justify-center py-3">
+          <BreathingOrb
+            count={count}
+            status={orbStatus}
+            goal={goal}
+            dailyTarget={dailyTarget}
           />
-          <StatBlock
-            label="Momentum"
-            value={<HonestStreakDisplay streak={streak} />}
-          />
-          {smokeFreeRate && (
-            <StatBlock
-              label="Success rate"
-              value={
-                <span style={{ color: smokeFreeRate.rate >= 70 ? 'var(--accent)' : 'var(--muted)' }}>
-                  {smokeFreeRate.rate}%
-                </span>
-              }
-              subtitle={`${smokeFreeRate.smokeFree} of ${smokeFreeRate.total} days on target`}
-            />
-          )}
-          <StatBlock
-            label="10-yr projection"
-            value={formatCurrency(projected, currency)}
-            valueClass="text-danger"
-          />
-          <div className="pt-1">
-            <EquivalentLine key={refreshKey} />
-          </div>
         </div>
 
-        {/* Log button */}
-        <div className="mb-2">
-          <LogButton onLogged={handleLogged} onLongPress={() => navigate('/log')} />
-        </div>
-        <p className="text-dim text-xs font-mono text-center mb-3">
-          hold to add details
-        </p>
+        {/* Streak */}
+        <StreakDisplay streak={streak} />
 
-        {/* Craving button */}
+        {/* Quick log */}
+        <QuickLogButton
+          onLogged={handleQuickLog}
+          onLongPress={() => navigate('/log')}
+          saving={saving}
+        />
+
+        {/* Craving */}
         <button
           onClick={() => setShowCraving(true)}
-          className="w-full py-3 rounded-2xl border text-xs font-mono transition-all mb-1"
-          style={{ borderColor: 'var(--border)', background: 'var(--surface)', color: 'var(--muted)' }}
+          className="w-full py-3 rounded-2xl text-sm font-normal transition-all"
+          style={{
+            background: 'var(--surface)',
+            border: '1px solid var(--border)',
+            color: 'var(--muted)',
+          }}
         >
           craving right now? tap for a 10-min delay
         </button>
 
-        {/* Personal reason */}
-        {quitReason && REASON_PHRASE[quitReason] && (
-          <p className="text-[10px] font-mono text-center mt-2" style={{ color: 'var(--dim)' }}>
-            {REASON_PHRASE[quitReason]}
-          </p>
-        )}
+        {/* Stat pills */}
+        <div className="flex gap-2.5">
+          <StatPill label="today" value={formatCurrency(spend, currency)} />
+          {smokeFreeRate && (
+            <StatPill
+              label="30d target"
+              value={`${smokeFreeRate.rate}%`}
+              valueColor={smokeFreeRate.rate >= 70 ? 'var(--success)' : 'var(--muted)'}
+            />
+          )}
+          <StatPill
+            label="10yr cost"
+            value={formatCurrency(projected, currency)}
+            valueColor="var(--danger)"
+          />
+        </div>
+
+        {/* Pattern insight */}
+        <InsightCard refreshKey={refreshKey} />
 
         {/* Today's log */}
         <TodayLog refreshKey={refreshKey} onChanged={handleLogged} />

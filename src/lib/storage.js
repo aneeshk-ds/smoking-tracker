@@ -443,6 +443,10 @@ export async function getTodayEntries() {
     .toArray()
 }
 
+export async function getAllDayStats() {
+  return db.dayStats.orderBy('date').toArray()
+}
+
 // ---- Helpers ----
 
 async function getStatsByRange(days) {
