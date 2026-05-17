@@ -28,6 +28,23 @@ const CURRENCIES = ['INR', 'USD', 'EUR', 'GBP']
 const GOALS = ['awareness', 'reduce', 'quit']
 const GOAL_LABELS = { awareness: 'Aware', reduce: 'Reduce', quit: 'Quit' }
 
+const GOAL_DESCRIPTIONS = {
+  awareness: 'Track without limits. Understand your patterns.',
+  reduce:    'Cut down to a daily target. Build control.',
+  quit:      'Zero is the goal. Every smoke-free hour counts.',
+}
+
+const WHY_OPTIONS = [
+  { key: 'family',  label: 'My family' },
+  { key: 'health',  label: 'My health' },
+  { key: 'partner', label: 'My partner' },
+  { key: 'child',   label: 'My child' },
+  { key: 'money',   label: 'Save money' },
+  { key: 'fitness', label: 'Improve fitness' },
+  { key: 'control', label: 'Feel in control' },
+  { key: 'doctor',  label: 'Doctor advised' },
+]
+
 export default function Settings() {
   const [settings, setSettings] = useState(null)
 
@@ -35,6 +52,8 @@ export default function Settings() {
   const [pendingGoal, setPendingGoal] = useState(null)
   const [pendingTarget, setPendingTarget] = useState(null)
   const [goalSaved, setGoalSaved] = useState(false)
+  const [showQuitReasonModal, setShowQuitReasonModal] = useState(false)
+  const [pendingQuitReason, setPendingQuitReason] = useState(null)
 
   // Brand / purchase
   const [pendingBrand, setPendingBrand] = useState(null)
@@ -102,12 +121,36 @@ export default function Settings() {
   // ── Handlers ──
 
   async function saveGoal() {
+    // Switching TO quit — prompt for a reason first
+    if (pendingGoal === 'quit' && settings.goal !== 'quit') {
+      setPendingQuitReason(settings.quitReason ?? null)
+      setShowQuitReasonModal(true)
+      return
+    }
     const patch = { goal: pendingGoal }
     if (pendingGoal === 'reduce') patch.dailyTarget = pendingTarget
     await updateSettings(patch)
     setSettings((prev) => ({ ...prev, ...patch }))
     setGoalSaved(true)
     setTimeout(() => setGoalSaved(false), 1500)
+  }
+
+  async function confirmGoalWithReason(reason) {
+    const patch = { goal: 'quit' }
+    if (reason) patch.quitReason = reason
+    await updateSettings(patch)
+    setSettings((prev) => ({ ...prev, ...patch }))
+    setShowQuitReasonModal(false)
+    setPendingGoal('quit')
+    setGoalSaved(true)
+    setTimeout(() => setGoalSaved(false), 1500)
+  }
+
+  async function changeQuitReason(reason) {
+    if (!reason) return
+    await updateSettings({ quitReason: reason })
+    setSettings((prev) => ({ ...prev, quitReason: reason }))
+    setShowQuitReasonModal(false)
   }
 
   async function saveBrandDefaults() {
@@ -298,7 +341,7 @@ export default function Settings() {
 
         {/* ── Goal ── */}
         <Section title="GOAL">
-          <div className="flex gap-2 mb-3">
+          <div className="flex gap-2 mb-2">
             {GOALS.map((g) => (
               <button
                 key={g}
@@ -315,6 +358,11 @@ export default function Settings() {
             ))}
           </div>
 
+          {/* Goal description */}
+          <p className="text-[10px] font-mono mb-3" style={{ color: 'var(--dim)' }}>
+            {GOAL_DESCRIPTIONS[pendingGoal]}
+          </p>
+
           {pendingGoal === 'reduce' && (
             <div className="flex items-center justify-between mb-3">
               <span className="text-muted text-xs font-mono">Daily target</span>
@@ -326,6 +374,27 @@ export default function Settings() {
             </div>
           )}
 
+          {/* Quit reason row — only when already in quit mode */}
+          {settings.goal === 'quit' && pendingGoal === 'quit' && (
+            <div
+              className="flex items-center justify-between mb-3 px-3 py-2 rounded-xl"
+              style={{ background: 'var(--surface-2)', border: '1px solid var(--border)' }}
+            >
+              <span className="text-[10px] font-mono" style={{ color: 'var(--dim)' }}>
+                {settings.quitReason
+                  ? `Reason: ${WHY_OPTIONS.find(o => o.key === settings.quitReason)?.label ?? settings.quitReason}`
+                  : 'No reason set'}
+              </span>
+              <button
+                onClick={() => { setPendingQuitReason(settings.quitReason ?? null); setShowQuitReasonModal(true) }}
+                className="text-[10px] font-mono border border-border rounded px-2 py-1"
+                style={{ color: 'var(--muted)' }}
+              >
+                Change
+              </button>
+            </div>
+          )}
+
           {goalChanged && (
             <button
               onClick={saveGoal}
@@ -334,6 +403,9 @@ export default function Settings() {
             >
               {goalSaved ? 'Saved' : 'Save goal'}
             </button>
+          )}
+          {goalSaved && !goalChanged && (
+            <p className="text-center text-[10px] font-mono" style={{ color: 'var(--accent)' }}>Saved</p>
           )}
         </Section>
 
@@ -631,6 +703,16 @@ export default function Settings() {
 
       </div>
 
+      {/* Quit reason modal */}
+      {showQuitReasonModal && (
+        <GoalQuitModal
+          currentReason={pendingQuitReason}
+          isChangingReason={settings.goal === 'quit'}
+          onConfirm={settings.goal === 'quit' ? changeQuitReason : confirmGoalWithReason}
+          onCancel={() => setShowQuitReasonModal(false)}
+        />
+      )}
+
       {/* Currency warning modal */}
       {showCurrencyWarning && (
         <Modal>
@@ -720,6 +802,61 @@ function Toggle({ value, onChange }) {
         style={{ transform: value ? 'translateX(22px)' : 'translateX(2px)' }}
       />
     </button>
+  )
+}
+
+function GoalQuitModal({ currentReason, isChangingReason, onConfirm, onCancel }) {
+  const [selected, setSelected] = useState(currentReason ?? null)
+
+  return (
+    <Modal>
+      <p className="text-text text-sm font-mono font-medium mb-1">
+        {isChangingReason ? 'Change your reason' : 'Why are you quitting?'}
+      </p>
+      <p className="text-muted text-[10px] font-mono mb-4 leading-relaxed">
+        {isChangingReason
+          ? 'Update what keeps you going on hard days.'
+          : 'A clear reason helps on hard days. You can change it anytime.'}
+      </p>
+
+      <div className="grid grid-cols-2 gap-2 mb-4">
+        {WHY_OPTIONS.map((opt) => (
+          <button
+            key={opt.key}
+            onClick={() => setSelected(opt.key)}
+            className="py-2 px-3 rounded-xl text-xs font-mono border transition-all duration-150"
+            style={{
+              background: selected === opt.key ? 'rgba(167,139,250,0.14)' : 'var(--surface-2)',
+              color: selected === opt.key ? 'var(--accent)' : 'var(--muted)',
+              borderColor: selected === opt.key ? 'var(--accent)' : 'var(--border)',
+            }}
+          >
+            {opt.label}
+          </button>
+        ))}
+      </div>
+
+      <div className="flex gap-2">
+        <button
+          onClick={onCancel}
+          className="flex-1 py-2 rounded-xl text-xs font-mono border border-border text-muted bg-surface-2"
+        >
+          Cancel
+        </button>
+        <button
+          onClick={() => onConfirm(selected)}
+          disabled={!selected}
+          className="flex-1 py-2 rounded-xl text-xs font-mono transition-all"
+          style={{
+            background: selected ? 'var(--accent)' : 'var(--surface-2)',
+            color: selected ? 'var(--bg)' : 'var(--dim)',
+            opacity: selected ? 1 : 0.6,
+          }}
+        >
+          {isChangingReason ? 'Update reason' : 'Set goal to Quit'}
+        </button>
+      </div>
+    </Modal>
   )
 }
 
