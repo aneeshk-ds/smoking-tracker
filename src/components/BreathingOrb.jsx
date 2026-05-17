@@ -11,12 +11,12 @@
 export default function BreathingOrb({ count, status = 'neutral', goal = 'awareness', dailyTarget = null }) {
   // status: 'good' | 'warning' | 'neutral'
   const ringColor =
-    status === 'good'    ? '#E8A838' :  // amber — on track
+    status === 'good'    ? '#A78BFA' :  // violet — on track
     status === 'warning' ? '#F87171' :  // red — over target
     '#6366F1'                           // indigo — neutral/awareness
 
   const ringGlow =
-    status === 'good'    ? 'rgba(232,168,56,0.28)' :
+    status === 'good'    ? 'rgba(167,139,250,0.28)' :
     status === 'warning' ? 'rgba(248,113,113,0.22)' :
     'rgba(99,102,241,0.22)'
 

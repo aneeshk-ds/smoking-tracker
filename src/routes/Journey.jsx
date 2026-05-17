@@ -55,14 +55,14 @@ function StreakSummaryCard({ streak, shield, weekXP }) {
       className="rounded-2xl p-5"
       style={{
         background: 'linear-gradient(135deg, #1a2e50 0%, #1e1b40 100%)',
-        border: '1px solid rgba(232,168,56,0.2)',
+        border: '1px solid rgba(167,139,250,0.2)',
       }}
     >
       <div className="flex items-start justify-between">
         <div>
           <div className="flex items-baseline gap-2">
             <span style={{ fontSize: 36 }}>🔥</span>
-            <span className="streak-number" style={{ color: '#E8A838' }}>{current}</span>
+            <span className="streak-number" style={{ color: '#A78BFA' }}>{current}</span>
             <span className="text-lg font-bold" style={{ color: 'var(--muted)' }}>
               {current === 1 ? 'day' : 'days'}
             </span>
@@ -88,8 +88,8 @@ function StreakSummaryCard({ streak, shield, weekXP }) {
           <div
             className="px-3 py-1.5 rounded-full text-xs font-semibold"
             style={{
-              background: 'rgba(232,168,56,0.1)',
-              color: '#E8A838',
+              background: 'rgba(167,139,250,0.1)',
+              color: '#A78BFA',
             }}
           >
             Best: {best}d
@@ -105,7 +105,7 @@ function StreakSummaryCard({ streak, shield, weekXP }) {
           <span className="text-xs font-normal" style={{ color: 'var(--muted)' }}>
             This week's score
           </span>
-          <span className="text-sm font-bold" style={{ color: '#E8A838' }}>
+          <span className="text-sm font-bold" style={{ color: '#A78BFA' }}>
             {weekXP} pts
           </span>
         </div>

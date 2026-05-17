@@ -12,10 +12,10 @@
     --muted: #7E94A8;
     --dim: #3D5470;
 
-    /* Accent — warm amber for streak / primary CTA */
-    --accent: #E8A838;
-    --accent-dim: rgba(232, 168, 56, 0.14);
-    --accent-glow: rgba(232, 168, 56, 0.22);
+    /* Accent — soft violet for streak / primary CTA */
+    --accent: #A78BFA;
+    --accent-dim: rgba(167, 139, 250, 0.14);
+    --accent-glow: rgba(167, 139, 250, 0.22);
 
     /* Semantic */
     --success: #4ADE80;

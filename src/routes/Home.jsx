@@ -73,7 +73,7 @@ function QuickLogButton({ onLogged, onLongPress, saving }) {
         style={{
           background: 'var(--accent)',
           color: '#0D1420',
-          boxShadow: '0 4px 24px rgba(232,168,56,0.32)',
+          boxShadow: '0 4px 24px rgba(167,139,250,0.32)',
         }}
       >
         {saving ? 'Logging...' : (

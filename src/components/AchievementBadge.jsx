@@ -22,7 +22,7 @@ export default function AchievementBadge({ badge, size = 'md', animate = false }
             ? 'linear-gradient(145deg, #1E3A6E 0%, #2D1B69 100%)'
             : 'var(--surface-2)',
           border: badge.unlocked
-            ? '1.5px solid rgba(232,168,56,0.4)'
+            ? '1.5px solid rgba(167,139,250,0.4)'
             : '1.5px solid var(--border)',
           opacity: badge.unlocked ? 1 : 0.45,
           boxShadow: badge.unlocked

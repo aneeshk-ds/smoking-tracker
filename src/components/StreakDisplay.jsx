@@ -20,7 +20,7 @@ export default function StreakDisplay({ streak, shieldAvailable = false }) {
         <span style={{ fontSize: 28, lineHeight: 1 }}>🔥</span>
         <div>
           <div className="flex items-baseline gap-1.5">
-            <span className="streak-number" style={{ color: '#E8A838' }}>
+            <span className="streak-number" style={{ color: '#A78BFA' }}>
               {count}
             </span>
             <span
@@ -55,9 +55,9 @@ export default function StreakDisplay({ streak, shieldAvailable = false }) {
           <div
             className="px-2.5 py-1 rounded-full text-xs font-semibold"
             style={{
-              background: 'rgba(232,168,56,0.14)',
-              color: '#E8A838',
-              border: '1px solid rgba(232,168,56,0.25)',
+              background: 'rgba(167,139,250,0.14)',
+              color: '#A78BFA',
+              border: '1px solid rgba(167,139,250,0.25)',
             }}
           >
             PB
