@@ -67,11 +67,21 @@ export default function LogButton({ onLogged, onLongPress }) {
         <span className="font-mono text-sm">logged</span>
       ) : (
         <>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-            <line x1="12" y1="5" x2="12" y2="19" />
-            <line x1="5" y1="12" x2="19" y2="12" />
+          {/* Cigarette icon — angled slightly, filter on right, ember + smoke on left */}
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            {/* Smoke wisps */}
+            <path d="M5 9 Q4.2 7.5 5 6" strokeWidth="1.5" opacity="0.75" />
+            <path d="M8 8.5 Q7.2 7 8 5.5" strokeWidth="1.5" opacity="0.5" />
+            {/* Body */}
+            <rect x="3" y="11" width="14" height="3.5" rx="1.75" fill="currentColor" opacity="0.15" />
+            <rect x="3" y="11" width="14" height="3.5" rx="1.75" />
+            {/* Filter */}
+            <rect x="17" y="11" width="4" height="3.5" rx="1" fill="currentColor" opacity="0.4" />
+            {/* Ember */}
+            <circle cx="3.2" cy="12.75" r="1.1" fill="currentColor" />
           </svg>
-          <span>Log now</span>
+          <span>Log a cigarette</span>
         </>
       )}
     </button>

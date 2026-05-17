@@ -76,7 +76,19 @@ function QuickLogButton({ onLogged, onLongPress, saving }) {
           boxShadow: '0 4px 24px rgba(232,168,56,0.32)',
         }}
       >
-        {saving ? 'Logging...' : '+ Log a cigarette'}
+        {saving ? 'Logging...' : (
+          <span className="flex items-center justify-center gap-2">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M5 9 Q4.2 7.5 5 6" strokeWidth="1.4" opacity="0.7" />
+              <path d="M8 8.5 Q7.2 7 8 5.5" strokeWidth="1.4" opacity="0.5" />
+              <rect x="3" y="11" width="14" height="3.5" rx="1.75" />
+              <rect x="17" y="11" width="4" height="3.5" rx="1" opacity="0.55" />
+              <circle cx="3.2" cy="12.75" r="1.1" fill="currentColor" />
+            </svg>
+            Log a cigarette
+          </span>
+        )}
       </button>
       <p className="text-xs font-normal" style={{ color: 'var(--dim)' }}>
         hold to add brand, mood, or trigger
