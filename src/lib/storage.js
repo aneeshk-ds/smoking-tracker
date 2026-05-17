@@ -1,6 +1,6 @@
 import Dexie from 'dexie'
 import { format, startOfDay, endOfDay, isWeekend, subDays, startOfMonth, endOfMonth, subMonths } from 'date-fns'
-import { computeHonestStreak } from './streaks'
+import { computeHonestStreak, computeSmokingStreak } from './streaks'
 
 const db = new Dexie('TrackerDB')
 
@@ -188,6 +188,11 @@ export async function getCurrentStreakHonest() {
   const settings = await getSettings()
   const allStats = await db.dayStats.toArray()
   return computeHonestStreak(allStats, settings)
+}
+
+export async function getSmokingStreak() {
+  const allStats = await db.dayStats.toArray()
+  return computeSmokingStreak(allStats)
 }
 
 export async function getHeatmapData(days = 90) {

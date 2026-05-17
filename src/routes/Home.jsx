@@ -5,6 +5,7 @@ import {
   getTodayCount,
   getTodaySpend,
   getCurrentStreakHonest,
+  getSmokingStreak,
   getProjectedCost,
   getSettings,
   getSmokeFreeRate,
@@ -126,15 +127,16 @@ export default function Home() {
   const [showCraving, setShowCraving] = useState(false)
 
   const load = useCallback(async () => {
-    const [count, spend, streak, projected, settings, smokeFreeRate] = await Promise.all([
+    const [count, spend, streak, smokingStreak, projected, settings, smokeFreeRate] = await Promise.all([
       getTodayCount(),
       getTodaySpend(),
       getCurrentStreakHonest(),
+      getSmokingStreak(),
       getProjectedCost(10),
       getSettings(),
       getSmokeFreeRate(30),
     ])
-    setData({ count, spend, streak, projected, settings, smokeFreeRate })
+    setData({ count, spend, streak, smokingStreak, projected, settings, smokeFreeRate })
   }, [])
 
   useEffect(() => { load() }, [load, refreshKey])
@@ -180,7 +182,7 @@ export default function Home() {
     )
   }
 
-  const { count, spend, streak, projected, settings, smokeFreeRate } = data
+  const { count, spend, streak, smokingStreak, projected, settings, smokeFreeRate } = data
   const goal        = settings?.goal ?? 'awareness'
   const dailyTarget = settings?.dailyTarget ?? null
   const quitReason  = settings?.quitReason ?? null
@@ -230,7 +232,7 @@ export default function Home() {
         </div>
 
         {/* Streak */}
-        <StreakDisplay streak={streak} />
+        <StreakDisplay streak={streak} smokingStreak={smokingStreak} />
 
         {/* Quick log */}
         <QuickLogButton

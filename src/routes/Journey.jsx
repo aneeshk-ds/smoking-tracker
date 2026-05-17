@@ -5,6 +5,7 @@ import {
   getSettings,
   getLastCigaretteTime,
   getCurrentStreakHonest,
+  getSmokingStreak,
 } from '../lib/storage'
 import {
   computeAchievementStats,
@@ -36,78 +37,93 @@ function SectionHeader({ title, subtitle }) {
 
 // ── Streak summary card ───────────────────────────────────────────────────────
 
-function StreakSummaryCard({ streak, shield, weekXP }) {
-  if (!streak || streak.mode === 'awareness') {
-    return (
-      <div className="card p-5">
-        <p className="text-sm font-normal" style={{ color: 'var(--muted)' }}>
-          Set a goal in Settings to unlock streaks
-        </p>
-      </div>
-    )
-  }
+function StreakSummaryCard({ streak, smokingStreak, shield, weekXP }) {
+  const smokingRun    = smokingStreak?.currentRun ?? 0
+  const smokingBest   = smokingStreak?.longestRun ?? 0
+  const hasGoalStreak = streak && streak.mode !== 'awareness'
 
-  const current = streak.currentRun ?? streak.daysSinceLast ?? 0
-  const best    = streak.bestRun ?? streak.personalBest ?? 0
+  const current = hasGoalStreak ? (streak.currentRun ?? streak.daysSinceLast ?? 0) : 0
+  const best    = hasGoalStreak ? (streak.bestRun ?? streak.personalBest ?? 0) : 0
 
   return (
     <div
-      className="rounded-2xl p-5"
+      className="rounded-2xl overflow-hidden"
       style={{
         background: 'linear-gradient(135deg, #1a2e50 0%, #1e1b40 100%)',
         border: '1px solid rgba(167,139,250,0.2)',
       }}
     >
-      <div className="flex items-start justify-between">
-        <div>
+      {/* Two-column streaks */}
+      <div className="flex">
+        {/* Smoke-free streak */}
+        <div className="flex-1 p-5">
           <div className="flex items-baseline gap-2">
-            <span style={{ fontSize: 36 }}>🔥</span>
+            <span style={{ fontSize: 28 }}>🔥</span>
             <span className="streak-number" style={{ color: '#A78BFA' }}>{current}</span>
-            <span className="text-lg font-bold" style={{ color: 'var(--muted)' }}>
+            <span className="text-base font-bold" style={{ color: 'var(--muted)' }}>
               {current === 1 ? 'day' : 'days'}
             </span>
           </div>
-          <p className="text-sm font-normal mt-1" style={{ color: 'var(--muted)' }}>
-            current streak
+          <p className="text-xs font-normal mt-1" style={{ color: 'var(--muted)' }}>
+            {hasGoalStreak
+              ? (streak.mode === 'quitting' ? 'smoke-free' : 'on target')
+              : 'smoke-free'}
+          </p>
+          <p className="text-[10px] font-normal mt-1.5" style={{ color: 'var(--dim)' }}>
+            best: {best}d
           </p>
         </div>
-        <div className="flex flex-col items-end gap-2">
-          {shield?.available && (
+
+        {/* Divider */}
+        <div style={{ width: 1, background: 'rgba(167,139,250,0.15)' }} />
+
+        {/* Smoking streak */}
+        <div className="flex-1 p-5">
+          <div className="flex items-baseline gap-2">
+            <span style={{ fontSize: 28 }}>🚬</span>
+            <span
+              className="streak-number"
+              style={{ color: smokingRun > 0 ? '#F87171' : 'var(--dim)' }}
+            >
+              {smokingRun}
+            </span>
+            <span className="text-base font-bold" style={{ color: 'var(--muted)' }}>
+              {smokingRun === 1 ? 'day' : 'days'}
+            </span>
+          </div>
+          <p className="text-xs font-normal mt-1" style={{ color: 'var(--muted)' }}>
+            smoking in a row
+          </p>
+          <p className="text-[10px] font-normal mt-1.5" style={{ color: 'var(--dim)' }}>
+            longest: {smokingBest}d
+          </p>
+        </div>
+      </div>
+
+      {/* Badges row */}
+      {(shield?.available || weekXP > 0) && (
+        <div
+          className="flex items-center justify-between px-5 py-3"
+          style={{ borderTop: '1px solid rgba(167,139,250,0.12)', background: 'rgba(0,0,0,0.2)' }}
+        >
+          {shield?.available ? (
             <div
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold"
+              className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold"
               style={{
                 background: 'rgba(74,222,128,0.12)',
                 color: '#4ADE80',
                 border: '1px solid rgba(74,222,128,0.25)',
               }}
             >
-              <span style={{ fontSize: 13 }}>🛡</span>
+              <span style={{ fontSize: 12 }}>🛡</span>
               Shield ready
             </div>
+          ) : <div />}
+          {weekXP > 0 && (
+            <span className="text-xs font-semibold" style={{ color: '#A78BFA' }}>
+              {weekXP} pts this week
+            </span>
           )}
-          <div
-            className="px-3 py-1.5 rounded-full text-xs font-semibold"
-            style={{
-              background: 'rgba(167,139,250,0.1)',
-              color: '#A78BFA',
-            }}
-          >
-            Best: {best}d
-          </div>
-        </div>
-      </div>
-
-      {weekXP > 0 && (
-        <div
-          className="mt-4 flex items-center justify-between px-4 py-3 rounded-xl"
-          style={{ background: 'rgba(0,0,0,0.25)' }}
-        >
-          <span className="text-xs font-normal" style={{ color: 'var(--muted)' }}>
-            This week's score
-          </span>
-          <span className="text-sm font-bold" style={{ color: '#A78BFA' }}>
-            {weekXP} pts
-          </span>
         </div>
       )}
     </div>
@@ -237,12 +253,13 @@ export default function Journey() {
 
   useEffect(() => {
     async function load() {
-      const [cigs, dayStats, settings, lastTs, streak] = await Promise.all([
+      const [cigs, dayStats, settings, lastTs, streak, smokingStreak] = await Promise.all([
         getAllCigarettes(),
         getAllDayStats(),
         getSettings(),
         getLastCigaretteTime(),
         getCurrentStreakHonest(),
+        getSmokingStreak(),
       ])
 
       const stats  = computeAchievementStats(cigs, dayStats, settings)
@@ -262,6 +279,7 @@ export default function Journey() {
         shield,
         grid,
         streak,
+        smokingStreak,
         weekXP: stats.weekXP,
         reached,
         upcoming: upcoming.slice(0, 5),
@@ -297,7 +315,7 @@ export default function Journey() {
         {/* Streak summary */}
         <section>
           <SectionHeader title="Streak" subtitle="consecutive days on target" />
-          <StreakSummaryCard streak={data.streak} shield={data.shield} weekXP={data.weekXP} />
+          <StreakSummaryCard streak={data.streak} smokingStreak={data.smokingStreak} shield={data.shield} weekXP={data.weekXP} />
         </section>
 
         {/* Achievements */}

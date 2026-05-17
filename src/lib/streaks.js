@@ -174,6 +174,45 @@ export function computeHonestStreak(allStats, settings) {
   return { mode: 'awareness', displayText: null }
 }
 
+/**
+ * computeSmokingStreak — consecutive days the user HAS smoked, backwards from today.
+ * A non-zero result is a warning signal; zero means they're currently clean.
+ */
+export function computeSmokingStreak(allStats) {
+  if (!allStats.length) return { currentRun: 0, longestRun: 0 }
+
+  const statsMap = {}
+  for (const s of allStats) statsMap[s.date] = s
+
+  const today = new Date()
+
+  // Walk backwards: count consecutive days with count > 0
+  let currentRun = 0
+  for (let i = 0; i < 365; i++) {
+    const d = format(subDays(today, i), 'yyyy-MM-dd')
+    const stat = statsMap[d]
+    if (!stat) break          // no record for this day — stop
+    if (stat.count > 0) currentRun++
+    else break                // clean day breaks the streak
+  }
+
+  // All-time longest smoking run
+  const sorted = [...allStats].sort((a, b) => a.date.localeCompare(b.date))
+  let longestRun = 0
+  let run = 0
+  for (const s of sorted) {
+    if (s.count > 0) {
+      run++
+      if (run > longestRun) longestRun = run
+    } else {
+      run = 0
+    }
+  }
+  longestRun = Math.max(longestRun, currentRun)
+
+  return { currentRun, longestRun }
+}
+
 function computePersonalBest(allStats) {
   if (!allStats.length) return 0
   const sorted = [...allStats].sort((a, b) => a.date.localeCompare(b.date))
