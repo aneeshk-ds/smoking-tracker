@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
 import { isFSASupported, pickBackupFolder, disableBackup, performBackup } from '../lib/backup'
 import {
   getSettings,
@@ -46,6 +48,8 @@ const WHY_OPTIONS = [
 ]
 
 export default function Settings() {
+  const navigate = useNavigate()
+  const auth = useAuth()
   const [settings, setSettings] = useState(null)
 
   // Goal section
@@ -338,6 +342,33 @@ export default function Settings() {
       </div>
 
       <div className="px-4 max-w-md mx-auto space-y-3 mt-1">
+
+        {/* ── Account / Backup ── */}
+        <Section title="ACCOUNT">
+          <button
+            onClick={() => navigate('/account')}
+            className="w-full flex items-center justify-between py-2 text-left"
+          >
+            <div>
+              <div className="text-sm text-text">
+                {auth.user ? (auth.user.phone || auth.user.email) : auth.cloud ? 'Sign in to back up' : 'Backup not set up'}
+              </div>
+              <div className="text-xs font-mono mt-0.5" style={{ color: auth.user && auth.status === 'synced' ? 'var(--success)' : 'var(--muted)' }}>
+                {auth.user
+                  ? (auth.status === 'synced' ? 'Synced to cloud' : auth.status === 'syncing' ? 'Syncing...' : auth.status === 'error' ? 'Sync error' : 'Connected')
+                  : auth.cloud ? 'Guest - on this device only' : 'Local-only build'}
+              </div>
+            </div>
+            <span style={{ color: 'var(--muted)' }}>›</span>
+          </button>
+          <button
+            onClick={() => navigate('/privacy')}
+            className="w-full text-left text-xs font-mono mt-1"
+            style={{ color: 'var(--muted)' }}
+          >
+            Privacy
+          </button>
+        </Section>
 
         {/* ── Goal ── */}
         <Section title="GOAL">

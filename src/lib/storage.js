@@ -10,6 +10,27 @@ db.version(1).stores({
   dayStats: 'date',
 })
 
+// v2 adds cloud-sync support: an updatedAt index and a tombstones table so
+// deletions propagate to other devices.
+db.version(2).stores({
+  cigarettes: 'id, timestamp, brand, createdAt, updatedAt',
+  settings: 'id',
+  dayStats: 'date',
+  tombstones: 'id, deletedAt',
+})
+
+// ---- Local change events (drive cloud sync) ----
+const changeListeners = new Set()
+export function onLocalChange(cb) {
+  changeListeners.add(cb)
+  return () => changeListeners.delete(cb)
+}
+function emitChange(kind) {
+  for (const cb of changeListeners) {
+    try { cb(kind) } catch { /* ignore */ }
+  }
+}
+
 function uuid() {
   return crypto.randomUUID
     ? crypto.randomUUID()
@@ -78,6 +99,7 @@ export async function logCigarette(partial = {}) {
     craving: partial.craving ?? null,
     resisted: false,
     createdAt: now,
+    updatedAt: now,
   }
 
   await db.cigarettes.add(record)
@@ -92,6 +114,7 @@ export async function logCigarette(partial = {}) {
   // Auto-set baseline after 7 days of logging
   await maybeSetBaseline()
 
+  emitChange('cigarette')
   return record
 }
 
@@ -128,13 +151,16 @@ export async function deleteCigarette(id) {
   const rec = await db.cigarettes.get(id)
   if (!rec) return
   await db.cigarettes.delete(id)
+  await db.tombstones.put({ id, deletedAt: Date.now() })
   await recomputeDayStats(dateStr(rec.timestamp))
+  emitChange('cigarette')
 }
 
 export async function updateCigarette(id, patch) {
-  await db.cigarettes.update(id, patch)
+  await db.cigarettes.update(id, { ...patch, updatedAt: Date.now() })
   const rec = await db.cigarettes.get(id)
   if (rec) await recomputeDayStats(dateStr(rec.timestamp))
+  emitChange('cigarette')
 }
 
 // ---- Settings ----
@@ -144,12 +170,14 @@ export async function getSettings() {
 }
 
 export async function updateSettings(patch) {
+  const stamped = { ...patch, updatedAt: Date.now() }
   const existing = await db.settings.get('user')
   if (existing) {
-    await db.settings.update('user', patch)
+    await db.settings.update('user', stamped)
   } else {
-    await db.settings.put({ id: 'user', ...patch })
+    await db.settings.put({ id: 'user', ...stamped })
   }
+  emitChange('settings')
 }
 
 export async function addBrand(brand) {
@@ -334,6 +362,8 @@ export async function deleteAllData() {
   await db.cigarettes.clear()
   await db.dayStats.clear()
   await db.settings.clear()
+  if (db.tombstones) await db.tombstones.clear()
+  emitChange('reset')
 }
 
 // ---- Week / Month snapshots ----
@@ -464,4 +494,69 @@ async function getStatsByRange(days) {
       return diffDays >= 0 && diffDays < days
     })
     .sort((a, b) => a.date.localeCompare(b.date))
+}
+
+
+// ---- Cloud sync helpers ----
+
+// Settings keys that must never leave the device (browser handles, transient).
+const LOCAL_ONLY_SETTINGS_KEYS = ['backupDirHandle', 'backupEnabled', 'lastBackupAt']
+
+export function stripLocalOnly(settings) {
+  if (!settings) return settings
+  const out = {}
+  for (const [k, v] of Object.entries(settings)) {
+    if (LOCAL_ONLY_SETTINGS_KEYS.includes(k)) continue
+    out[k] = v
+  }
+  return out
+}
+
+// Snapshot of everything that should sync to the cloud.
+export async function getSyncSnapshot() {
+  const cigarettes = await db.cigarettes.toArray()
+  const settings = await db.settings.get('user')
+  const tombstones = db.tombstones ? await db.tombstones.toArray() : []
+  return {
+    cigarettes,
+    settings: settings ? stripLocalOnly(settings) : null,
+    tombstones,
+  }
+}
+
+// Write remote rows into the local DB without re-emitting a change event.
+export async function applyRemoteCigarettes(rows) {
+  if (!rows?.length) return
+  await db.cigarettes.bulkPut(rows)
+  const dates = new Set(rows.map((r) => dateStr(r.timestamp)))
+  for (const d of dates) await recomputeDayStats(d)
+}
+
+export async function applyRemoteDeletes(ids) {
+  if (!ids?.length) return
+  const affected = new Set()
+  for (const id of ids) {
+    const rec = await db.cigarettes.get(id)
+    if (rec) affected.add(dateStr(rec.timestamp))
+    await db.cigarettes.delete(id)
+  }
+  for (const d of affected) await recomputeDayStats(d)
+}
+
+export async function applyRemoteSettings(patch) {
+  if (!patch) return
+  const clean = stripLocalOnly(patch)
+  const existing = await db.settings.get('user')
+  if (existing) await db.settings.update('user', clean)
+  else await db.settings.put({ id: 'user', ...clean })
+  // no emitChange: this came from the cloud, don't echo it back
+}
+
+export async function getTombstones() {
+  return db.tombstones ? db.tombstones.toArray() : []
+}
+
+export async function clearTombstones(ids) {
+  if (!ids?.length || !db.tombstones) return
+  await db.tombstones.bulkDelete(ids)
 }

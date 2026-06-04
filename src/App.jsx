@@ -9,6 +9,9 @@ import Settings  from './routes/Settings'
 import Log       from './routes/Log'
 import History   from './routes/History'
 import Journey   from './routes/Journey'
+import Account   from './routes/Account'
+import Privacy   from './routes/Privacy'
+import { AuthProvider } from './context/AuthContext'
 
 export default function App() {
   const [onboarded, setOnboarded] = useState(null)
@@ -28,6 +31,7 @@ export default function App() {
   }
 
   return (
+    <AuthProvider>
     <BrowserRouter>
       <Routes>
         <Route
@@ -44,8 +48,11 @@ export default function App() {
         <Route path="/health"   element={<Health />} />
         <Route path="/settings" element={<Settings />} />
         <Route path="/log"      element={<Log />} />
+        <Route path="/account"  element={<Account />} />
+        <Route path="/privacy"  element={<Privacy />} />
         <Route path="*"         element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
+    </AuthProvider>
   )
 }
