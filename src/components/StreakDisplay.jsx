@@ -4,6 +4,8 @@
  *   Right (red):    consecutive days WITH any cigarettes (warning signal)
  */
 
+import { Lung, BurningCigarette } from './StreakArt'
+
 export default function StreakDisplay({ streak, smokingStreak, shieldAvailable = false }) {
   const smokingRun    = smokingStreak?.currentRun ?? 0
   const hasGoalStreak = streak && streak.mode !== 'awareness'
@@ -32,7 +34,7 @@ export default function StreakDisplay({ streak, smokingStreak, shieldAvailable =
           className="flex-1 flex items-start gap-3 px-4 py-4"
           style={{ background: 'var(--surface)' }}
         >
-          <span style={{ fontSize: 24, lineHeight: 1, marginTop: 2 }}>🔥</span>
+          <div style={{ marginTop: 1 }}><Lung days={cleanCount} size={40} /></div>
           <div className="min-w-0">
             <div className="flex items-baseline gap-1">
               <span className="streak-number" style={{ color: '#A78BFA', fontSize: 28, fontWeight: 700 }}>
@@ -61,7 +63,7 @@ export default function StreakDisplay({ streak, smokingStreak, shieldAvailable =
           className="flex-1 flex items-start gap-3 px-4 py-4"
           style={{ background: smokingRun > 0 ? 'rgba(248,113,113,0.04)' : 'var(--surface)' }}
         >
-          <span style={{ fontSize: 24, lineHeight: 1, marginTop: 2 }}>🚬</span>
+          <div style={{ marginTop: 1 }}><BurningCigarette days={smokingRun} size={40} /></div>
           <div className="min-w-0">
             <div className="flex items-baseline gap-1">
               <span
