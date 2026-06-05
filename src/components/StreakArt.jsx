@@ -1,67 +1,45 @@
 /**
- * StreakArt — two visuals that respond to the streak counters on the Home card.
+ * StreakArt — minimal line-art visuals that respond to the streak counters.
  *
- *   <Lung days={smokeFreeDays} />        heals as smoke-free days grow:
- *                                        dull grey -> healthy violet, toxin
- *                                        spots clear, a soft glow appears.
+ *   <Lung days={smokeFreeDays} />        thin-stroke lungs that fill with soft
+ *                                        violet as smoke-free days grow.
+ *   <BurningCigarette days={smokingDays} /> a slim cigarette: a single ember and
+ *                                        one smoke curl, paper shortens as the
+ *                                        smoking-day streak grows.
  *
- *   <BurningCigarette days={smokingDays} /> burns further as the smoking-day
- *                                        streak grows: the paper shortens, the
- *                                        ember intensifies, more smoke rises.
- *
- * Both are pure SVG, no dependencies. Tune the *_FULL constants to change how
- * many days reach the fully-healed / fully-burnt look.
+ * Pure SVG, no dependencies. Tune *_FULL to change how many days reach the
+ * fully-healed / fully-burnt look.
  */
 
-const LUNG_FULL = 30   // days of smoke-free streak to reach full health
-const CIG_FULL  = 12   // days of smoking streak to reach a fully-burnt look
+const LUNG_FULL = 30
+const CIG_FULL  = 12
 
 function clamp01(x) { return Math.max(0, Math.min(1, x)) }
-
-function hexToRgb(h) {
-  const n = parseInt(h.slice(1), 16)
-  return [(n >> 16) & 255, (n >> 8) & 255, n & 255]
-}
+function hexToRgb(h) { const n = parseInt(h.slice(1), 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255] }
 function lerpColor(a, b, t) {
   const ca = hexToRgb(a), cb = hexToRgb(b)
   const m = ca.map((v, i) => Math.round(v + (cb[i] - v) * t))
   return `rgb(${m[0]}, ${m[1]}, ${m[2]})`
 }
 
-// Fixed toxin-spot positions inside the lobes; we show the first N of them.
-const SPOTS = [
-  [16, 30], [31, 28], [18, 38], [30, 39], [22, 33], [27, 35],
-]
+// One lobe, drawn for the right side; the left is the same path mirrored.
+const LOBE = 'M25 17 C 26 23, 31 24, 35 29 C 38 33, 37 40, 32 41 C 28 41.5, 26 36, 25.6 29 C 25.3 24, 25 20, 25 17 Z'
 
 export function Lung({ days = 0, size = 40 }) {
   const t = clamp01(days / LUNG_FULL)
-  const sick = '#5E6B79'        // dull grey-blue (unhealthy)
-  const healthy = '#A78BFA'     // violet, matches the streak accent
-  const fill = lerpColor(sick, healthy, t)
-  const stroke = lerpColor('#46505C', '#C4B5FD', t)
-  const spotCount = Math.round((1 - t) * 4)   // 4 -> 0 spots as health improves
-  const glow = t > 0.45 ? (t - 0.45) * 0.9 : 0
-
+  const line = lerpColor('#6B7280', '#A78BFA', t)
+  const fillOpacity = 0.06 + 0.4 * t
   return (
     <svg width={size} height={size} viewBox="0 0 48 48" fill="none" aria-label="lung health">
-      {glow > 0 && (
-        <ellipse cx="24" cy="32" rx="17" ry="15"
-          fill="#A78BFA" opacity={glow * 0.25}
-          style={{ filter: 'blur(4px)' }} />
-      )}
       {/* trachea + bronchi */}
-      <path d="M24 9 L24 20 M24 18 C24 18 20 19 18.5 22 M24 18 C24 18 28 19 29.5 22"
-        stroke={stroke} strokeWidth="2.1" strokeLinecap="round" />
-      {/* left lobe */}
-      <path d="M21 21 C14 22 10 28 10 35 C10 41 13 44 17 43 C20.5 42 21.5 38 21.5 33 L21.5 22 C21.5 21.3 21 21 21 21 Z"
-        fill={fill} stroke={stroke} strokeWidth="1.4" />
+      <path d="M24 8 L24 18 M24 17 C22.5 18.5, 22 18.8, 21 19.4 M24 17 C25.5 18.5, 26 18.8, 27 19.4"
+        stroke={line} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
       {/* right lobe */}
-      <path d="M27 21 C34 22 38 28 38 35 C38 41 35 44 31 43 C27.5 42 26.5 38 26.5 33 L26.5 22 C26.5 21.3 27 21 27 21 Z"
-        fill={fill} stroke={stroke} strokeWidth="1.4" />
-      {/* toxin spots fade out as the lung heals */}
-      {SPOTS.slice(0, spotCount).map(([cx, cy], i) => (
-        <circle key={i} cx={cx} cy={cy} r="1.9" fill="#2B3037" opacity="0.55" />
-      ))}
+      <path d={LOBE} fill="#A78BFA" fillOpacity={fillOpacity} stroke={line} strokeWidth="1.6" strokeLinejoin="round" />
+      {/* left lobe (mirrored) */}
+      <g transform="translate(48,0) scale(-1,1)">
+        <path d={LOBE} fill="#A78BFA" fillOpacity={fillOpacity} stroke={line} strokeWidth="1.6" strokeLinejoin="round" />
+      </g>
     </svg>
   )
 }
@@ -69,59 +47,37 @@ export function Lung({ days = 0, size = 40 }) {
 export function BurningCigarette({ days = 0, size = 40 }) {
   const active = days > 0
   const t = active ? clamp01(days / CIG_FULL) : 0
-  const burn = active ? 0.12 + 0.82 * t : 0   // fraction of paper consumed
+  const burn = active ? 0.1 + 0.82 * t : 0
 
-  // Geometry: cigarette lies horizontally. Filter (tan) on the right, paper to
-  // the left, burning tip at the far left. As burn grows the left end recedes.
-  const yMid = 30
-  const h = 7
-  const tipX = 8 + burn * 20            // left burning edge moves right as it burns
-  const filterX = 38                    // start of the tan filter
+  const yMid = 28
+  const h = 4
+  const tipX = 8 + burn * 22          // burning edge recedes as it burns
+  const filterX = 40
   const paperW = filterX - tipX
+  const ember = lerpColor('#F59E0B', '#EF4444', t)
 
-  const emberColor = active ? lerpColor('#F59E0B', '#EF4444', t) : '#9AA6B2'
-  const ashLen = active ? 2 + t * 3 : 0
-
-  // Smoke wisps: more and stronger as the streak grows
-  const wisps = active ? Math.min(3, 1 + Math.floor(t * 3)) : 0
-  const smokeOpacity = 0.2 + t * 0.55
+  // one smoke curl, taller and clearer the longer the streak
+  const smokeOpacity = 0.22 + t * 0.5
+  const rise = 8 + t * 8
+  const sx = tipX
 
   return (
     <svg width={size} height={size} viewBox="0 0 48 48" fill="none" aria-label="smoking streak">
-      {/* smoke */}
-      {Array.from({ length: wisps }).map((_, i) => {
-        const x = tipX + i * 2.5
-        const o = smokeOpacity * (1 - i * 0.22)
-        return (
-          <path key={i}
-            d={`M${x} ${yMid - 4} C ${x - 3} ${yMid - 10}, ${x + 3} ${yMid - 14}, ${x} ${yMid - 20}`}
-            stroke="#B8C2CC" strokeWidth="1.6" strokeLinecap="round" opacity={o} fill="none" />
-        )
-      })}
-
-      {/* paper body */}
-      {paperW > 1 && (
-        <rect x={tipX} y={yMid - h / 2} width={paperW} height={h} rx="1.2"
-          fill="#F4F1EA" stroke="#D8D2C4" strokeWidth="0.8" />
-      )}
-      {/* ash just behind the ember */}
-      {active && ashLen > 0 && (
-        <rect x={tipX} y={yMid - h / 2} width={ashLen} height={h} rx="1.2"
-          fill="#8A8A8A" opacity="0.85" />
-      )}
-      {/* burning ember at the tip */}
       {active && (
-        <>
-          <rect x={tipX - 2.4} y={yMid - h / 2} width="2.6" height={h} rx="1.2" fill={emberColor} />
-          <circle cx={tipX - 1} cy={yMid} r={1.6 + t * 1.2} fill={emberColor}
-            opacity="0.9" style={{ filter: 'blur(0.6px)' }} />
-        </>
+        <path
+          d={`M${sx} ${yMid - h} C ${sx - 3} ${yMid - h - rise * 0.5}, ${sx + 3} ${yMid - h - rise * 0.8}, ${sx} ${yMid - h - rise}`}
+          stroke="#9AA6B2" strokeWidth="1.5" strokeLinecap="round" opacity={smokeOpacity} fill="none" />
       )}
-      {/* tan filter */}
-      <rect x={filterX} y={yMid - h / 2} width="6" height={h} rx="1.4"
-        fill={active ? '#D8A24A' : '#A9966B'} stroke="#B07C2E" strokeWidth="0.6" />
-      <line x1={filterX} y1={yMid - h / 2} x2={filterX} y2={yMid + h / 2}
-        stroke="#B07C2E" strokeWidth="0.8" opacity="0.6" />
+      {/* paper */}
+      {paperW > 1 && (
+        <rect x={tipX} y={yMid - h / 2} width={paperW} height={h} rx={h / 2}
+          fill={active ? '#E9E7E1' : '#9AA6B2'} fillOpacity={active ? 1 : 0.5} />
+      )}
+      {/* ember tip */}
+      {active && <circle cx={tipX} cy={yMid} r={1.7 + t * 0.8} fill={ember} />}
+      {/* filter */}
+      <rect x={filterX} y={yMid - h / 2} width="5" height={h} rx={h / 2}
+        fill={active ? '#CDA15A' : '#7E8895'} fillOpacity={active ? 1 : 0.5} />
     </svg>
   )
 }
