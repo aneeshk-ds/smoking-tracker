@@ -22,19 +22,9 @@ import BackupBanner from '../components/BackupBanner'
 import LapseRecoveryModal from '../components/LapseRecoveryModal'
 import CravingModal from '../components/CravingModal'
 import TodayLog from '../components/TodayLog'
+import ReasonCard from '../components/ReasonCard'
 
 const GOAL_LABEL = { awareness: 'AWARE', reduce: 'REDUCE', quit: 'QUIT' }
-
-const REASON_PHRASE = {
-  family:  'for your family',
-  health:  'for your health',
-  partner: 'for your partner',
-  child:   'for your child',
-  money:   'to save money',
-  fitness: 'for your fitness',
-  control: 'to feel in control',
-  doctor:  "on doctor's advice",
-}
 
 function computeOrbStatus(count, goal, dailyTarget) {
   if (goal === 'quit') return count === 0 ? 'good' : 'warning'
@@ -203,11 +193,6 @@ export default function Home() {
             {dateLabel}
           </span>
           <div className="flex items-center gap-2">
-            {quitReason && REASON_PHRASE[quitReason] && (
-              <span className="text-xs font-normal" style={{ color: 'var(--dim)' }}>
-                {REASON_PHRASE[quitReason]}
-              </span>
-            )}
             <span
               className="text-xs font-bold tracking-widest px-2.5 py-1 rounded-lg"
               style={{
@@ -233,6 +218,9 @@ export default function Home() {
 
         {/* Streak */}
         <StreakDisplay streak={streak} smokingStreak={smokingStreak} />
+
+        {/* Why you're quitting */}
+        <ReasonCard quitReason={quitReason} />
 
         {/* Quick log */}
         <QuickLogButton

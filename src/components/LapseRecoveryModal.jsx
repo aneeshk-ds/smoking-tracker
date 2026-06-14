@@ -53,7 +53,7 @@ export default function LapseRecoveryModal({ previousRun, goal, quitReason, onCl
               <h2 className="font-display text-xl" style={{ color: 'var(--text)' }}>
                 Rough moment.
               </h2>
-              <p className="text-sm font-mono mt-2 leading-relaxed" style={{ color: 'var(--muted)' }}>
+              <p className="text-sm font-sans mt-2 leading-relaxed" style={{ color: 'var(--muted)' }}>
                 {previousRun > 0
                   ? `${previousRun} good day${previousRun !== 1 ? 's' : ''} before this — that progress is still real.`
                   : 'One slip doesn\'t define the journey.'}
@@ -63,13 +63,13 @@ export default function LapseRecoveryModal({ previousRun, goal, quitReason, onCl
 
             {/* What triggered it */}
             <div className="mb-5">
-              <label className="text-xs font-mono block mb-2" style={{ color: 'var(--muted)' }}>
+              <label className="text-xs font-sans block mb-2" style={{ color: 'var(--muted)' }}>
                 What triggered it? (optional)
               </label>
               <select
                 value={trigger}
                 onChange={(e) => setTrigger(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl text-sm font-mono border appearance-none"
+                className="w-full px-4 py-3 rounded-xl text-sm font-sans border appearance-none"
                 style={{
                   background: 'var(--surface-2)',
                   borderColor: trigger ? 'var(--accent)' : 'var(--border)',
@@ -83,7 +83,7 @@ export default function LapseRecoveryModal({ previousRun, goal, quitReason, onCl
 
             {/* Protective actions */}
             <div className="mb-6">
-              <p className="text-xs font-mono mb-3" style={{ color: 'var(--muted)' }}>
+              <p className="text-xs font-sans mb-3" style={{ color: 'var(--muted)' }}>
                 One of these in the next 10 minutes helps:
               </p>
               <div className="flex flex-col gap-2">
@@ -94,7 +94,7 @@ export default function LapseRecoveryModal({ previousRun, goal, quitReason, onCl
                     style={{ background: 'var(--surface-2)', border: '1px solid var(--border)' }}
                   >
                     <div className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: 'var(--accent)', opacity: 0.6 }} />
-                    <span className="text-xs font-mono" style={{ color: 'var(--muted)' }}>{action}</span>
+                    <span className="text-xs font-sans" style={{ color: 'var(--muted)' }}>{action}</span>
                   </div>
                 ))}
               </div>
@@ -113,7 +113,7 @@ export default function LapseRecoveryModal({ previousRun, goal, quitReason, onCl
             <div className="text-2xl font-display mb-3" style={{ color: 'var(--text)' }}>
               Good.
             </div>
-            <p className="text-sm font-mono leading-relaxed mb-8" style={{ color: 'var(--muted)' }}>
+            <p className="text-sm font-sans leading-relaxed mb-8" style={{ color: 'var(--muted)' }}>
               The next cigarette is the one that matters — not the one that just happened.
             </p>
             <button

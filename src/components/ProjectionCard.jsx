@@ -5,7 +5,7 @@ const YEARS = [1, 5, 10]
 
 export default function ProjectionCard({ dailyCost, currency = 'INR' }) {
   if (!dailyCost) {
-    return <p className="text-dim text-xs font-mono">Log costs to see projections.</p>
+    return <p className="text-dim text-xs font-sans">Log costs to see projections.</p>
   }
 
   const projections = YEARS.map((y) => ({
@@ -23,7 +23,7 @@ export default function ProjectionCard({ dailyCost, currency = 'INR' }) {
       <div className="grid grid-cols-3 gap-2">
         {projections.map(({ years, amount }) => (
           <div key={years} className="rounded-xl p-3 bg-surface-2 border border-border text-center">
-            <div className="text-dim text-[10px] font-mono mb-1">{years} yr</div>
+            <div className="text-dim text-[10px] font-sans mb-1">{years} yr</div>
             <div
               className="font-display text-base leading-tight"
               style={{ color: 'var(--danger)' }}
@@ -42,10 +42,10 @@ export default function ProjectionCard({ dailyCost, currency = 'INR' }) {
         >
           <span className="text-danger text-lg">≈</span>
           <div>
-            <div className="text-text text-xs font-mono">
+            <div className="text-text text-xs font-sans">
               {topEq.count} {topEq.item}{topEq.count !== 1 ? 's' : ''}
             </div>
-            <div className="text-muted text-[10px] font-mono">over 10 years at this rate</div>
+            <div className="text-muted text-[10px] font-sans">over 10 years at this rate</div>
           </div>
         </div>
       )}

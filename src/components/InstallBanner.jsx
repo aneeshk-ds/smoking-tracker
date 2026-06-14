@@ -67,25 +67,25 @@ export default function InstallBanner() {
         <div className="flex-1 min-w-0">
           {mode === 'ios' ? (
             <>
-              <p className="text-text text-xs font-mono font-medium mb-0.5">Add to Home Screen</p>
-              <p className="text-muted text-[10px] font-mono leading-relaxed">
+              <p className="text-text text-xs font-sans font-medium mb-0.5">Add to Home Screen</p>
+              <p className="text-muted text-[10px] font-sans leading-relaxed">
                 Tap <span className="text-accent">Share</span> then{' '}
                 <span className="text-accent">Add to Home Screen</span> for the full app experience.
               </p>
             </>
           ) : (
             <>
-              <p className="text-text text-xs font-mono font-medium mb-0.5">Install Smoking Tracker</p>
+              <p className="text-text text-xs font-sans font-medium mb-0.5">Install Smoking Tracker</p>
               <button
                 onClick={install}
-                className="text-accent text-[10px] font-mono"
+                className="text-accent text-[10px] font-sans"
               >
                 Install app for offline use
               </button>
             </>
           )}
         </div>
-        <button onClick={dismiss} className="text-dim text-xs font-mono flex-shrink-0 mt-0.5">
+        <button onClick={dismiss} className="text-dim text-xs font-sans flex-shrink-0 mt-0.5">
           ✕
         </button>
       </div>

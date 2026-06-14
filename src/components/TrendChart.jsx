@@ -13,7 +13,7 @@ import { format } from 'date-fns'
 const CustomTooltip = ({ active, payload, label }) => {
   if (!active || !payload?.length) return null
   return (
-    <div className="bg-surface border border-border rounded-lg px-3 py-2 text-xs font-mono">
+    <div className="bg-surface border border-border rounded-lg px-3 py-2 text-xs font-sans">
       <div className="text-muted mb-1">{label}</div>
       <div className="text-accent">{payload[0]?.value} cigs</div>
     </div>
@@ -22,7 +22,7 @@ const CustomTooltip = ({ active, payload, label }) => {
 
 export default function TrendChart({ data, dailyTarget }) {
   if (!data?.length) {
-    return <p className="text-dim text-xs font-mono">No data yet.</p>
+    return <p className="text-dim text-xs font-sans">No data yet.</p>
   }
 
   const formatted = data.map((d) => ({
@@ -38,13 +38,13 @@ export default function TrendChart({ data, dailyTarget }) {
         <CartesianGrid vertical={false} stroke="var(--border)" strokeDasharray="3 3" />
         <XAxis
           dataKey="date"
-          tick={{ fill: 'var(--dim)', fontSize: 9, fontFamily: 'JetBrains Mono' }}
+          tick={{ fill: 'var(--dim)', fontSize: 9, fontFamily: '-apple-system, BlinkMacSystemFont, SF Pro Text, system-ui, sans-serif' }}
           tickLine={false}
           axisLine={false}
           interval="preserveStartEnd"
         />
         <YAxis
-          tick={{ fill: 'var(--dim)', fontSize: 9, fontFamily: 'JetBrains Mono' }}
+          tick={{ fill: 'var(--dim)', fontSize: 9, fontFamily: '-apple-system, BlinkMacSystemFont, SF Pro Text, system-ui, sans-serif' }}
           tickLine={false}
           axisLine={false}
           domain={[0, maxVal + 1]}

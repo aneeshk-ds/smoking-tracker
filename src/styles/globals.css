@@ -24,6 +24,26 @@
     --danger-dim: rgba(248, 113, 113, 0.13);
   }
 
+  /* Light theme — applied when <html data-theme="light"> (see lib/theme.js) */
+  :root[data-theme='light'] {
+    --bg: #F4F6FA;
+    --surface: #FFFFFF;
+    --surface-2: #EDF1F7;
+    --border: #DCE3ED;
+    --text: #16202E;
+    --muted: #5E708A;
+    --dim: #94A3B8;
+
+    --accent: #7C5CE0;
+    --accent-dim: rgba(124, 92, 224, 0.12);
+    --accent-glow: rgba(124, 92, 224, 0.18);
+
+    --success: #16A34A;
+    --success-dim: rgba(22, 163, 74, 0.12);
+    --danger: #DC2626;
+    --danger-dim: rgba(220, 38, 38, 0.12);
+  }
+
   * {
     box-sizing: border-box;
     -webkit-tap-highlight-color: transparent;

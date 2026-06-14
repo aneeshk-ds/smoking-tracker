@@ -52,7 +52,7 @@ export default function Health() {
           </div>
         ) : lastTs === null ? (
           <div className="rounded-2xl border border-border bg-surface p-5 text-center">
-            <p className="text-muted text-xs font-mono">Log your first cigarette to start tracking recovery.</p>
+            <p className="text-muted text-xs font-sans">Log your first cigarette to start tracking recovery.</p>
           </div>
         ) : (
           <ElapsedCard elapsed={elapsed} next={next} progress={progress} />
@@ -87,7 +87,7 @@ export default function Health() {
             {upcoming.length > 4 && (
               <button
                 onClick={() => setShowAllUpcoming((v) => !v)}
-                className="w-full mt-2 py-2.5 rounded-xl border border-border bg-surface-2 text-dim text-xs font-mono"
+                className="w-full mt-2 py-2.5 rounded-xl border border-border bg-surface-2 text-dim text-xs font-sans"
               >
                 {showAllUpcoming ? 'Show less' : `+${upcoming.length - 4} more milestones`}
               </button>
@@ -104,10 +104,10 @@ export default function Health() {
               backgroundColor: 'rgba(0,229,160,0.04)',
             }}
           >
-            <div className="text-[10px] font-mono text-muted mb-1 uppercase tracking-wide">Support</div>
-            <div className="text-text text-sm font-mono font-medium mb-0.5">iCall Counselling</div>
-            <div className="text-accent font-mono text-xl font-medium tracking-wide">9152987821</div>
-            <div className="text-dim text-[10px] font-mono mt-1.5 leading-relaxed">
+            <div className="text-[10px] font-sans text-muted mb-1 uppercase tracking-wide">Support</div>
+            <div className="text-text text-sm font-sans font-medium mb-0.5">iCall Counselling</div>
+            <div className="text-accent font-sans text-xl font-medium tracking-wide">9152987821</div>
+            <div className="text-dim text-[10px] font-sans mt-1.5 leading-relaxed">
               Mon-Sat, 8am-10pm. Free, confidential.
               <br />TISS Mumbai. Covers addiction and quit support.
             </div>
@@ -115,7 +115,7 @@ export default function Health() {
         )}
 
         {/* ── Source footnote ── */}
-        <p className="text-dim text-[10px] font-mono text-center pb-2">
+        <p className="text-dim text-[10px] font-sans text-center pb-2">
           Milestones sourced from WHO, CDC, and NHS guidelines.
         </p>
 
@@ -132,7 +132,7 @@ function ElapsedCard({ elapsed, next, progress }) {
 
   return (
     <div className="rounded-2xl border border-border bg-surface p-5">
-      <div className="text-[10px] font-mono text-muted mb-3 uppercase tracking-wide">
+      <div className="text-[10px] font-sans text-muted mb-3 uppercase tracking-wide">
         Time smoke-free
       </div>
 
@@ -147,10 +147,10 @@ function ElapsedCard({ elapsed, next, progress }) {
       {next ? (
         <div>
           <div className="flex justify-between items-center mb-1.5">
-            <span className="text-muted text-[10px] font-mono">
+            <span className="text-muted text-[10px] font-sans">
               Next: <span className="text-text">{next.label}</span> — {next.title}
             </span>
-            <span className="text-dim text-[10px] font-mono">{progress}%</span>
+            <span className="text-dim text-[10px] font-sans">{progress}%</span>
           </div>
           <div className="h-1 rounded-full bg-surface-2 overflow-hidden">
             <div
@@ -160,7 +160,7 @@ function ElapsedCard({ elapsed, next, progress }) {
           </div>
         </div>
       ) : (
-        <div className="text-accent text-xs font-mono">All milestones reached.</div>
+        <div className="text-accent text-xs font-sans">All milestones reached.</div>
       )}
     </div>
   )
@@ -178,7 +178,7 @@ function TimeUnit({ value, unit, large }) {
       >
         {String(value).padStart(2, '0')}
       </span>
-      <span className="text-dim text-[10px] font-mono mt-1">{unit}</span>
+      <span className="text-dim text-[10px] font-sans mt-1">{unit}</span>
     </div>
   )
 }
@@ -187,14 +187,14 @@ function SectionHeader({ label, count, accent }) {
   return (
     <div className="flex items-center gap-2 px-1">
       <span
-        className="text-[10px] font-mono font-medium tracking-widest uppercase"
+        className="text-[10px] font-sans font-medium tracking-widest uppercase"
         style={{ color: accent ? 'var(--accent)' : 'var(--dim)' }}
       >
         {label}
       </span>
       {count != null && (
         <span
-          className="text-[9px] font-mono px-1.5 py-0.5 rounded-full"
+          className="text-[9px] font-sans px-1.5 py-0.5 rounded-full"
           style={{
             backgroundColor: accent ? 'rgba(0,229,160,0.12)' : 'var(--surface-2)',
             color: accent ? 'var(--accent)' : 'var(--dim)',
@@ -242,23 +242,23 @@ function MilestoneCard({ milestone, reached, timeLabel }) {
       <div className="flex-1 min-w-0">
         <div className="flex items-baseline justify-between gap-2">
           <span
-            className="text-[10px] font-mono"
+            className="text-[10px] font-sans"
             style={{ color: reached ? 'var(--accent)' : 'var(--muted)' }}
           >
             {milestone.label}
           </span>
           {timeLabel && !reached && (
-            <span className="text-[10px] font-mono text-dim flex-shrink-0">{timeLabel}</span>
+            <span className="text-[10px] font-sans text-dim flex-shrink-0">{timeLabel}</span>
           )}
         </div>
         <div
-          className="text-xs font-mono font-medium mt-0.5"
+          className="text-xs font-sans font-medium mt-0.5"
           style={{ color: reached ? 'var(--text)' : 'var(--muted)' }}
         >
           {milestone.title}
         </div>
         <div
-          className="text-[10px] font-mono mt-0.5 leading-relaxed"
+          className="text-[10px] font-sans mt-0.5 leading-relaxed"
           style={{ color: reached ? 'var(--muted)' : 'var(--dim)' }}
         >
           {milestone.body}

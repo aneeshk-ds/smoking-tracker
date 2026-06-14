@@ -92,7 +92,7 @@ export default function Insights() {
             <button
               key={r}
               onClick={() => setRange(r)}
-              className={`flex-1 py-2 rounded-xl text-xs font-mono border transition-all duration-150 ${
+              className={`flex-1 py-2 rounded-xl text-xs font-sans border transition-all duration-150 ${
                 range === r
                   ? 'bg-accent text-bg border-accent'
                   : 'bg-surface-2 text-muted border-border'
@@ -178,10 +178,10 @@ function Card({ title, subtitle, dangerSubtitle, compact, children }) {
   return (
     <div className="rounded-2xl border border-border bg-surface p-4">
       <div className="flex items-baseline justify-between mb-3">
-        <span className="text-text text-xs font-mono font-medium tracking-wide uppercase">{title}</span>
+        <span className="text-text text-xs font-sans font-medium tracking-wide uppercase">{title}</span>
         {subtitle && (
           <span
-            className="text-[10px] font-mono"
+            className="text-[10px] font-sans"
             style={{ color: dangerSubtitle ? 'var(--danger)' : 'var(--dim)' }}
           >
             {subtitle}
@@ -196,14 +196,14 @@ function Card({ title, subtitle, dangerSubtitle, compact, children }) {
 function SummaryCell({ label, value, unit, accent, small }) {
   return (
     <div className="rounded-xl bg-surface border border-border p-2.5 text-center">
-      <div className="text-dim text-[9px] font-mono mb-1">{label}</div>
+      <div className="text-dim text-[9px] font-sans mb-1">{label}</div>
       <div
         className={`font-display leading-tight ${small ? 'text-sm' : 'text-xl'}`}
         style={{ color: accent ? 'var(--accent)' : 'var(--text)' }}
       >
         {value}
       </div>
-      {unit && <div className="text-dim text-[9px] font-mono">{unit}</div>}
+      {unit && <div className="text-dim text-[9px] font-sans">{unit}</div>}
     </div>
   )
 }
@@ -264,16 +264,16 @@ function CravingTrendChart({ data }) {
         ))}
       </svg>
       <div className="flex justify-between items-center mt-2">
-        <span className="text-[10px] font-mono" style={{ color: 'var(--dim)' }}>
+        <span className="text-[10px] font-sans" style={{ color: 'var(--dim)' }}>
           earliest · avg {first}/10
         </span>
         <span
-          className="text-[10px] font-mono"
+          className="text-[10px] font-sans"
           style={{ color: improving ? 'var(--accent)' : 'var(--danger)' }}
         >
           {improving ? '↓' : '↑'} {Math.abs(delta)} — {improving ? 'getting easier' : 'still building'}
         </span>
-        <span className="text-[10px] font-mono" style={{ color: 'var(--dim)' }}>
+        <span className="text-[10px] font-sans" style={{ color: 'var(--dim)' }}>
           recent · avg {last}/10
         </span>
       </div>

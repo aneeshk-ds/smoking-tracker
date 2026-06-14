@@ -56,14 +56,14 @@ export default function Log() {
       <div className="flex flex-col gap-6">
         {/* Purchase type */}
         <div>
-          <label className="text-muted text-xs font-mono block mb-2">Bought as</label>
+          <label className="text-muted text-xs font-sans block mb-2">Bought as</label>
           <div className="flex rounded-xl border border-border overflow-hidden">
             {['pack', 'single'].map((t) => (
               <button
                 key={t}
                 type="button"
                 onClick={() => setPurchaseType(t)}
-                className={`flex-1 py-3 text-sm font-mono capitalize transition-colors ${
+                className={`flex-1 py-3 text-sm font-sans capitalize transition-colors ${
                   purchaseType === t ? 'bg-accent text-bg' : 'bg-surface-2 text-muted'
                 }`}
               >
@@ -76,14 +76,14 @@ export default function Log() {
         {/* Brand */}
         {settings?.brands?.length > 0 && (
           <div>
-            <label className="text-muted text-xs font-mono block mb-2">Brand</label>
+            <label className="text-muted text-xs font-sans block mb-2">Brand</label>
             <div className="flex flex-wrap gap-2">
               {settings.brands.map((b) => (
                 <button
                   key={b.name}
                   type="button"
                   onClick={() => setBrand(b.name)}
-                  className={`px-3 py-2 rounded-xl text-xs font-mono border transition-all ${
+                  className={`px-3 py-2 rounded-xl text-xs font-sans border transition-all ${
                     brand === b.name
                       ? 'border-accent bg-accent-dim text-accent'
                       : 'border-border bg-surface-2 text-muted'
@@ -98,11 +98,11 @@ export default function Log() {
 
         {/* Location */}
         <div>
-          <label className="text-muted text-xs font-mono block mb-2">Location (optional)</label>
+          <label className="text-muted text-xs font-sans block mb-2">Location (optional)</label>
           <select
             value={location ?? ''}
             onChange={(e) => setLocation(e.target.value || null)}
-            className="w-full px-4 py-3 rounded-xl text-sm font-mono border appearance-none"
+            className="w-full px-4 py-3 rounded-xl text-sm font-sans border appearance-none"
             style={{
               background: 'var(--surface-2)',
               borderColor: location ? 'var(--accent)' : 'var(--border)',
@@ -116,11 +116,11 @@ export default function Log() {
 
         {/* Mood */}
         <div>
-          <label className="text-muted text-xs font-mono block mb-2">Mood (optional)</label>
+          <label className="text-muted text-xs font-sans block mb-2">Mood (optional)</label>
           <select
             value={mood ?? ''}
             onChange={(e) => setMood(e.target.value || null)}
-            className="w-full px-4 py-3 rounded-xl text-sm font-mono border appearance-none"
+            className="w-full px-4 py-3 rounded-xl text-sm font-sans border appearance-none"
             style={{
               background: 'var(--surface-2)',
               borderColor: mood ? 'var(--accent)' : 'var(--border)',
@@ -134,11 +134,11 @@ export default function Log() {
 
         {/* Trigger */}
         <div>
-          <label className="text-muted text-xs font-mono block mb-2">Trigger (optional)</label>
+          <label className="text-muted text-xs font-sans block mb-2">Trigger (optional)</label>
           <select
             value={trigger ?? ''}
             onChange={(e) => setTrigger(e.target.value || null)}
-            className="w-full px-4 py-3 rounded-xl text-sm font-mono border appearance-none"
+            className="w-full px-4 py-3 rounded-xl text-sm font-sans border appearance-none"
             style={{
               background: 'var(--surface-2)',
               borderColor: trigger ? 'var(--accent)' : 'var(--border)',
@@ -148,14 +148,14 @@ export default function Log() {
             <option value="">— select trigger —</option>
             {TRIGGERS.map((t) => <option key={t} value={t}>{t}</option>)}
           </select>
-          <p className="text-[10px] font-mono mt-1.5" style={{ color: 'var(--dim)' }}>
+          <p className="text-[10px] font-sans mt-1.5" style={{ color: 'var(--dim)' }}>
             filling this in helps surface your smoking patterns over time
           </p>
         </div>
 
         {/* Craving */}
         <div>
-          <label className="text-muted text-xs font-mono block mb-2">
+          <label className="text-muted text-xs font-sans block mb-2">
             Craving intensity (optional): {craving ?? 'not set'}
           </label>
           <input
@@ -166,7 +166,7 @@ export default function Log() {
             onChange={(e) => setCraving(parseInt(e.target.value))}
             className="w-full accent-[var(--accent)]"
           />
-          <div className="flex justify-between text-dim text-xs font-mono mt-1">
+          <div className="flex justify-between text-dim text-xs font-sans mt-1">
             <span>1 mild</span>
             <span>10 intense</span>
           </div>

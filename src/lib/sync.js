@@ -1,51 +1,50 @@
-// Offline-first sync between local Dexie and Firestore.
+// Offline-first sync between local Dexie and Supabase (Postgres + Realtime).
 //
 // Model:
-//   users/{uid}                      -> settings document (+ updatedAt)
-//   users/{uid}/cigarettes/{id}      -> one doc per cigarette (+ updatedAt,
-//                                       deleted:true acts as a tombstone)
+//   public.cigarettes  -> one row per cigarette { id, user_id, data, updated_at, deleted }
+//   public.settings    -> one row per user      { user_id, data, updated_at }
 //
-// Strategy: last-write-wins by updatedAt. A guest who signs in for the first
-// time simply has no remote data yet, so reconcile() pushes all their local
-// rows up. That is the guest -> account migration.
-
-import {
-  doc, getDoc, setDoc, collection, getDocs, writeBatch, onSnapshot,
-} from 'firebase/firestore'
-import { getFirebase } from './firebase'
+// Strategy: last-write-wins by updated_at (epoch ms). A guest who signs in for
+// the first time has no remote rows, so reconcile() pushes everything up — that
+// is the guest -> account migration. The local Dexie helpers are reused as-is.
+import { getSupabase } from './supabase'
 import {
   getSyncSnapshot, applyRemoteCigarettes, applyRemoteDeletes, applyRemoteSettings,
   clearTombstones, onLocalChange,
 } from './storage'
 
-const BATCH_LIMIT = 400
+const UPSERT_LIMIT = 400
 
-function userDoc(db, uid) { return doc(db, 'users', uid) }
-function cigCol(db, uid) { return collection(db, 'users', uid, 'cigarettes') }
-
-// Firestore rejects undefined and non-serialisable values. Round-trip to drop
-// them (also strips any leftover browser handles or functions).
+// Supabase/Postgres rejects undefined. Round-trip to drop them and strip any
+// leftover browser handles or functions.
 function clean(obj) {
   return JSON.parse(JSON.stringify(obj))
 }
 
-function stripMeta(row) {
-  const { deleted, ...rest } = row
-  return rest
+// Turn a remote cigarette row into a plain local record.
+function remoteToRecord(row) {
+  return { id: row.id, ...(row.data || {}), updatedAt: row.updated_at }
 }
 
 // ---- Full two-way reconcile ----
 
 export async function reconcile(uid) {
-  const { db } = getFirebase()
-  if (!db || !uid) return
+  const sb = getSupabase()
+  if (!sb || !uid) return
 
-  // Read remote cigarettes + settings
+  // Read remote
   const remote = new Map()
-  const remoteSnap = await getDocs(cigCol(db, uid))
-  remoteSnap.forEach((d) => remote.set(d.id, d.data()))
-  const remoteSettingsSnap = await getDoc(userDoc(db, uid))
-  const remoteSettings = remoteSettingsSnap.exists() ? remoteSettingsSnap.data() : null
+  const { data: remoteRows, error: cigErr } = await sb
+    .from('cigarettes').select('id,data,updated_at,deleted').eq('user_id', uid)
+  if (cigErr) throw cigErr
+  for (const row of remoteRows || []) remote.set(row.id, row)
+
+  const { data: remoteSettingsRow, error: setErr } = await sb
+    .from('settings').select('data,updated_at').eq('user_id', uid).maybeSingle()
+  if (setErr) throw setErr
+  const remoteSettings = remoteSettingsRow
+    ? { ...(remoteSettingsRow.data || {}), updatedAt: remoteSettingsRow.updated_at }
+    : null
 
   // Read local
   const { cigarettes, settings, tombstones } = await getSyncSnapshot()
@@ -64,27 +63,24 @@ export async function reconcile(uid) {
     const rem = remote.get(id)
     const localTime = local?.updatedAt ?? local?.createdAt ?? 0
     const tombTime = tomb?.deletedAt ?? 0
-    const remTime = rem?.updatedAt ?? 0
+    const remTime = rem?.updated_at ?? 0
     const remDeleted = rem?.deleted === true
 
-    // Local delete wins
     if (tomb && tombTime >= remTime && tombTime >= localTime) {
       if (!remDeleted) toRemoteDelete.push(id)
       continue
     }
-    // Remote delete wins
     if (remDeleted && remTime >= localTime && remTime >= tombTime) {
       if (local) toLocalDelete.push(id)
       continue
     }
-    // Both live -> newer wins
     if (local && rem && !remDeleted) {
       if (localTime > remTime) toRemoteUpsert.push(local)
-      else if (remTime > localTime) toLocalUpsert.push(stripMeta({ id, ...rem }))
+      else if (remTime > localTime) toLocalUpsert.push(remoteToRecord(rem))
       continue
     }
     if (local && !rem) { toRemoteUpsert.push(local); continue }
-    if (!local && rem && !remDeleted) { toLocalUpsert.push(stripMeta({ id, ...rem })); continue }
+    if (!local && rem && !remDeleted) { toLocalUpsert.push(remoteToRecord(rem)); continue }
   }
 
   // Apply locally
@@ -99,68 +95,75 @@ export async function reconcile(uid) {
   }
 
   // Push to remote
-  await pushBatches(db, uid, toRemoteUpsert, toRemoteDelete)
+  await pushRows(sb, uid, toRemoteUpsert, toRemoteDelete)
   if (settings && (!remoteSettings || localSettingsTime >= remoteSettingsTime)) {
-    await setDoc(userDoc(db, uid), clean({ ...settings, updatedAt: localSettingsTime || Date.now() }), { merge: true })
+    const { error } = await sb.from('settings').upsert(
+      { user_id: uid, data: clean(settings), updated_at: localSettingsTime || Date.now() },
+      { onConflict: 'user_id' },
+    )
+    if (error) throw error
   }
 
-  // Local tombstones that are now reflected remotely can be dropped
+  // Tombstones now reflected remotely can be dropped
   await clearTombstones(toRemoteDelete)
 }
 
-async function pushBatches(db, uid, upserts, deletes) {
-  const ops = []
-  for (const row of upserts) {
-    ops.push([row.id, clean({ ...row, updatedAt: row.updatedAt ?? Date.now(), deleted: false })])
+async function pushRows(sb, uid, upserts, deletes) {
+  const rows = []
+  for (const rec of upserts) {
+    rows.push({
+      id: rec.id, user_id: uid, data: clean(rec),
+      updated_at: rec.updatedAt ?? Date.now(), deleted: false,
+    })
   }
   for (const id of deletes) {
-    ops.push([id, { deleted: true, updatedAt: Date.now() }])
+    rows.push({ id, user_id: uid, data: {}, updated_at: Date.now(), deleted: true })
   }
-  for (let i = 0; i < ops.length; i += BATCH_LIMIT) {
-    const chunk = ops.slice(i, i + BATCH_LIMIT)
-    const batch = writeBatch(db)
-    for (const [id, data] of chunk) {
-      batch.set(doc(cigCol(db, uid), id), data, { merge: true })
-    }
-    await batch.commit()
+  for (let i = 0; i < rows.length; i += UPSERT_LIMIT) {
+    const chunk = rows.slice(i, i + UPSERT_LIMIT)
+    const { error } = await sb.from('cigarettes').upsert(chunk, { onConflict: 'id' })
+    if (error) throw error
   }
 }
 
 // ---- Realtime subscription (remote -> local) ----
 
 export function subscribeRemote(uid, onApplied) {
-  const { db } = getFirebase()
-  if (!db || !uid) return () => {}
+  const sb = getSupabase()
+  if (!sb || !uid) return () => {}
 
-  const unsubCigs = onSnapshot(cigCol(db, uid), (snap) => {
-    const upserts = []
-    const deletes = []
-    snap.docChanges().forEach((ch) => {
-      if (ch.type === 'removed') return
-      const data = ch.doc.data()
-      if (data.deleted) deletes.push(ch.doc.id)
-      else upserts.push(stripMeta({ id: ch.doc.id, ...data }))
-    })
-    Promise.all([applyRemoteCigarettes(upserts), applyRemoteDeletes(deletes)])
-      .then(() => onApplied && onApplied())
-      .catch((e) => console.warn('[sync] remote apply failed', e))
-  }, (e) => console.warn('[sync] cig subscription error', e))
+  const channel = sb
+    .channel(`sync:${uid}`)
+    .on('postgres_changes',
+      { event: '*', schema: 'public', table: 'cigarettes', filter: `user_id=eq.${uid}` },
+      (payload) => {
+        const row = payload.new
+        if (!row) return
+        const apply = row.deleted
+          ? applyRemoteDeletes([row.id])
+          : applyRemoteCigarettes([remoteToRecord(row)])
+        apply.then(() => onApplied && onApplied())
+          .catch((e) => console.warn('[sync] remote cig apply failed', e))
+      })
+    .on('postgres_changes',
+      { event: '*', schema: 'public', table: 'settings', filter: `user_id=eq.${uid}` },
+      (payload) => {
+        const row = payload.new
+        if (!row) return
+        applyRemoteSettings({ ...(row.data || {}), updatedAt: row.updated_at })
+          .then(() => onApplied && onApplied())
+          .catch((e) => console.warn('[sync] remote settings apply failed', e))
+      })
+    .subscribe()
 
-  const unsubSettings = onSnapshot(userDoc(db, uid), (snap) => {
-    if (!snap.exists()) return
-    applyRemoteSettings(snap.data())
-      .then(() => onApplied && onApplied())
-      .catch((e) => console.warn('[sync] settings apply failed', e))
-  }, (e) => console.warn('[sync] settings subscription error', e))
-
-  return () => { unsubCigs(); unsubSettings() }
+  return () => { try { sb.removeChannel(channel) } catch { /* ignore */ } }
 }
 
 // ---- Local -> remote (debounced) ----
 
 export function startLocalPush(uid, onPushed) {
-  const { db } = getFirebase()
-  if (!db || !uid) return () => {}
+  const sb = getSupabase()
+  if (!sb || !uid) return () => {}
   let timer = null
   const stop = onLocalChange(() => {
     clearTimeout(timer)

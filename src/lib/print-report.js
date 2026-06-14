@@ -39,7 +39,7 @@ export function openPrintReport({ month, stats, settings, triggers, locations, t
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
-      font-family: 'JetBrains Mono', monospace;
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif;
       font-size: 12px;
       line-height: 1.6;
       color: #111;

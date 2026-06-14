@@ -18,7 +18,7 @@ function MomentumBar({ current, best }) {
           }}
         />
       </div>
-      <span className="text-[9px] font-mono" style={{ color: 'var(--dim)' }}>
+      <span className="text-[9px] font-sans" style={{ color: 'var(--dim)' }}>
         {pct}%
       </span>
     </div>
@@ -27,7 +27,7 @@ function MomentumBar({ current, best }) {
 
 export default function HonestStreakDisplay({ streak }) {
   if (!streak || streak.mode === 'awareness') {
-    return <span className="text-sm font-mono" style={{ color: 'var(--dim)' }}>tracking</span>
+    return <span className="text-sm font-sans" style={{ color: 'var(--dim)' }}>tracking</span>
   }
 
   if (streak.mode === 'reducing') {
@@ -37,7 +37,7 @@ export default function HonestStreakDisplay({ streak }) {
     return (
       <div>
         <span
-          className="text-sm font-mono"
+          className="text-sm font-sans"
           style={{ color: paused ? 'var(--muted)' : 'var(--text)' }}
         >
           {streak.homeLabel}
@@ -45,10 +45,10 @@ export default function HonestStreakDisplay({ streak }) {
         {!paused && currentRun > 0 && bestRun > 1 && (
           <MomentumBar current={currentRun} best={bestRun} />
         )}
-        <div className="text-[10px] font-mono mt-0.5" style={{ color: 'var(--dim)' }}>
+        <div className="text-[10px] font-sans mt-0.5" style={{ color: 'var(--dim)' }}>
           {nudge}
         </div>
-        <div className="text-[9px] font-mono mt-0.5" style={{ color: 'var(--dim)', opacity: 0.55 }}>
+        <div className="text-[9px] font-sans mt-0.5" style={{ color: 'var(--dim)', opacity: 0.55 }}>
           won't reset to zero on a slip day
         </div>
       </div>
@@ -62,7 +62,7 @@ export default function HonestStreakDisplay({ streak }) {
     return (
       <div>
         <span
-          className="text-sm font-mono"
+          className="text-sm font-sans"
           style={{ color: paused ? 'var(--muted)' : 'var(--text)' }}
         >
           {streak.homeLabel}
@@ -70,10 +70,10 @@ export default function HonestStreakDisplay({ streak }) {
         {!paused && daysSinceLast > 0 && personalBest > 1 && (
           <MomentumBar current={daysSinceLast} best={personalBest} />
         )}
-        <div className="text-[10px] font-mono mt-0.5" style={{ color: 'var(--dim)' }}>
+        <div className="text-[10px] font-sans mt-0.5" style={{ color: 'var(--dim)' }}>
           {nudge}
         </div>
-        <div className="text-[9px] font-mono mt-0.5" style={{ color: 'var(--dim)', opacity: 0.55 }}>
+        <div className="text-[9px] font-sans mt-0.5" style={{ color: 'var(--dim)', opacity: 0.55 }}>
           won't reset to zero on a slip day
         </div>
       </div>

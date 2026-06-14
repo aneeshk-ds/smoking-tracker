@@ -18,6 +18,8 @@ import {
 import { INDIAN_BRANDS } from '../lib/brands'
 import { formatCurrency } from '../lib/format'
 import { openPrintReport } from '../lib/print-report'
+import { getThemePref, setThemePref } from '../lib/theme'
+import { signOut } from '../lib/auth'
 import { generateShareCard } from '../lib/share-card'
 import {
   setBackupReminder,
@@ -50,6 +52,9 @@ const WHY_OPTIONS = [
 export default function Settings() {
   const navigate = useNavigate()
   const auth = useAuth()
+  const [theme, setThemeState] = useState(getThemePref())
+  function changeTheme(p) { setThemePref(p); setThemeState(p) }
+  async function handleSignOut() { try { await signOut() } catch { /* ignore */ } }
   const [settings, setSettings] = useState(null)
 
   // Goal section
@@ -345,29 +350,64 @@ export default function Settings() {
 
         {/* ── Account / Backup ── */}
         <Section title="ACCOUNT">
-          <button
-            onClick={() => navigate('/account')}
-            className="w-full flex items-center justify-between py-2 text-left"
-          >
+          {auth.user ? (
             <div>
-              <div className="text-sm text-text">
-                {auth.user ? (auth.user.phone || auth.user.email) : auth.cloud ? 'Sign in to back up' : 'Backup not set up'}
-              </div>
-              <div className="text-xs font-mono mt-0.5" style={{ color: auth.user && auth.status === 'synced' ? 'var(--success)' : 'var(--muted)' }}>
-                {auth.user
-                  ? (auth.status === 'synced' ? 'Synced to cloud' : auth.status === 'syncing' ? 'Syncing...' : auth.status === 'error' ? 'Sync error' : 'Connected')
-                  : auth.cloud ? 'Guest - on this device only' : 'Local-only build'}
-              </div>
+              <button onClick={() => navigate('/account')} className="w-full flex items-center gap-3 py-2 text-left">
+                <div className="w-11 h-11 rounded-full flex items-center justify-center text-base font-medium" style={{ background: 'var(--accent-dim)', color: 'var(--accent)' }}>
+                  {(auth.user.name || auth.user.email || auth.user.phone || 'U').trim().charAt(0).toUpperCase()}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm text-text truncate">{auth.user.name || auth.user.email || auth.user.phone}</div>
+                  <div className="text-xs truncate" style={{ color: 'var(--muted)' }}>{auth.user.email || auth.user.phone || 'Signed in'}</div>
+                </div>
+                <span style={{ color: 'var(--muted)' }}>›</span>
+              </button>
+
+              <button onClick={() => navigate('/account')} className="w-full flex items-center justify-between py-2.5 text-left border-t border-border">
+                <span className="text-sm text-text">Backup &amp; sync</span>
+                <span className="text-xs flex items-center gap-1.5" style={{ color: auth.status === 'synced' ? 'var(--success)' : 'var(--muted)' }}>
+                  {auth.status === 'synced' && <span className="w-1.5 h-1.5 rounded-full" style={{ background: 'var(--success)' }} />}
+                  {auth.status === 'synced' ? 'On \u00b7 synced' : auth.status === 'syncing' ? 'Syncing\u2026' : auth.status === 'error' ? 'Error \u2014 retrying' : 'On'}
+                </span>
+              </button>
+
+              <button onClick={() => navigate('/account')} className="w-full flex items-center justify-between py-2.5 text-left border-t border-border">
+                <span className="text-sm text-text">Login methods</span>
+                <span className="text-xs capitalize flex items-center gap-1" style={{ color: 'var(--muted)' }}>{auth.user.method}<span>›</span></span>
+              </button>
+
+              <button onClick={handleSignOut} className="w-full text-left py-2.5 text-sm border-t border-border" style={{ color: 'var(--danger)' }}>
+                Sign out
+              </button>
             </div>
-            <span style={{ color: 'var(--muted)' }}>›</span>
-          </button>
-          <button
-            onClick={() => navigate('/privacy')}
-            className="w-full text-left text-xs font-mono mt-1"
-            style={{ color: 'var(--muted)' }}
-          >
+          ) : (
+            <button onClick={() => navigate('/account')} className="w-full flex items-center justify-between py-2 text-left">
+              <div>
+                <div className="text-sm text-text">{auth.cloud ? 'Sign in to back up' : 'Backup not set up'}</div>
+                <div className="text-xs mt-0.5" style={{ color: 'var(--muted)' }}>{auth.cloud ? 'Guest \u2014 on this device only' : 'Local-only build'}</div>
+              </div>
+              <span style={{ color: 'var(--muted)' }}>›</span>
+            </button>
+          )}
+          <button onClick={() => navigate('/privacy')} className="w-full text-left text-xs font-sans mt-2" style={{ color: 'var(--muted)' }}>
             Privacy
           </button>
+        </Section>
+
+        {/* ── Appearance ── */}
+        <Section title="APPEARANCE">
+          <div className="flex gap-1 p-1 rounded-xl" style={{ background: 'var(--surface-2)' }}>
+            {['system', 'light', 'dark'].map((opt) => (
+              <button
+                key={opt}
+                onClick={() => changeTheme(opt)}
+                className="flex-1 py-2 rounded-lg text-xs font-sans capitalize transition-colors"
+                style={{ background: theme === opt ? 'var(--accent)' : 'transparent', color: theme === opt ? '#fff' : 'var(--muted)', fontWeight: 500 }}
+              >
+                {opt}
+              </button>
+            ))}
+          </div>
         </Section>
 
         {/* ── Goal ── */}
@@ -377,7 +417,7 @@ export default function Settings() {
               <button
                 key={g}
                 onClick={() => setPendingGoal(g)}
-                className="flex-1 py-2 rounded-xl text-xs font-mono border transition-all duration-150"
+                className="flex-1 py-2 rounded-xl text-xs font-sans border transition-all duration-150"
                 style={{
                   background: pendingGoal === g ? 'var(--accent)' : 'var(--surface-2)',
                   color: pendingGoal === g ? 'var(--bg)' : 'var(--muted)',
@@ -390,13 +430,13 @@ export default function Settings() {
           </div>
 
           {/* Goal description */}
-          <p className="text-[10px] font-mono mb-3" style={{ color: 'var(--dim)' }}>
+          <p className="text-[10px] font-sans mb-3" style={{ color: 'var(--dim)' }}>
             {GOAL_DESCRIPTIONS[pendingGoal]}
           </p>
 
           {pendingGoal === 'reduce' && (
             <div className="flex items-center justify-between mb-3">
-              <span className="text-muted text-xs font-mono">Daily target</span>
+              <span className="text-muted text-xs font-sans">Daily target</span>
               <div className="flex items-center gap-3">
                 <StepperButton onClick={() => setPendingTarget((t) => Math.max(1, t - 1))}>-</StepperButton>
                 <span className="font-display text-xl text-text w-6 text-center">{pendingTarget}</span>
@@ -411,14 +451,14 @@ export default function Settings() {
               className="flex items-center justify-between mb-3 px-3 py-2 rounded-xl"
               style={{ background: 'var(--surface-2)', border: '1px solid var(--border)' }}
             >
-              <span className="text-[10px] font-mono" style={{ color: 'var(--dim)' }}>
+              <span className="text-[10px] font-sans" style={{ color: 'var(--dim)' }}>
                 {settings.quitReason
                   ? `Reason: ${WHY_OPTIONS.find(o => o.key === settings.quitReason)?.label ?? settings.quitReason}`
                   : 'No reason set'}
               </span>
               <button
                 onClick={() => { setPendingQuitReason(settings.quitReason ?? null); setShowQuitReasonModal(true) }}
-                className="text-[10px] font-mono border border-border rounded px-2 py-1"
+                className="text-[10px] font-sans border border-border rounded px-2 py-1"
                 style={{ color: 'var(--muted)' }}
               >
                 Change
@@ -429,14 +469,14 @@ export default function Settings() {
           {goalChanged && (
             <button
               onClick={saveGoal}
-              className="w-full py-2 rounded-xl text-xs font-mono transition-all duration-150"
+              className="w-full py-2 rounded-xl text-xs font-sans transition-all duration-150"
               style={{ background: 'var(--accent)', color: 'var(--bg)' }}
             >
               {goalSaved ? 'Saved' : 'Save goal'}
             </button>
           )}
           {goalSaved && !goalChanged && (
-            <p className="text-center text-[10px] font-mono" style={{ color: 'var(--accent)' }}>Saved</p>
+            <p className="text-center text-[10px] font-sans" style={{ color: 'var(--accent)' }}>Saved</p>
           )}
         </Section>
 
@@ -452,7 +492,7 @@ export default function Settings() {
                   await updateSettings({ defaultBrand: b.name })
                   setSettings((prev) => ({ ...prev, defaultBrand: b.name }))
                 }}
-                className="px-2.5 py-1.5 rounded-lg text-[10px] font-mono border transition-all duration-150"
+                className="px-2.5 py-1.5 rounded-lg text-[10px] font-sans border transition-all duration-150"
                 style={{
                   background: pendingBrand === b.name ? 'rgba(0,229,160,0.12)' : 'var(--surface-2)',
                   color: pendingBrand === b.name ? 'var(--accent)' : 'var(--muted)',
@@ -467,13 +507,13 @@ export default function Settings() {
           {/* Price summary */}
           {activeBrand && !editingPrice && (
             <div className="flex items-center justify-between">
-              <div className="text-dim text-[10px] font-mono">
+              <div className="text-dim text-[10px] font-sans">
                 Pack {formatCurrency(activeBrand.packPrice, settings.currency ?? 'INR')} / {activeBrand.perPack}
                 {' · '}Single {formatCurrency(activeBrand.singlePrice, settings.currency ?? 'INR')}
               </div>
               <button
                 onClick={openPriceEditor}
-                className="text-muted text-[10px] font-mono border border-border rounded px-2 py-1"
+                className="text-muted text-[10px] font-sans border border-border rounded px-2 py-1"
               >
                 Edit
               </button>
@@ -491,14 +531,14 @@ export default function Settings() {
               <div className="flex gap-2">
                 <button
                   onClick={saveBrandPrice}
-                  className="flex-1 py-1.5 rounded-lg text-[10px] font-mono"
+                  className="flex-1 py-1.5 rounded-lg text-[10px] font-sans"
                   style={{ background: 'var(--accent)', color: 'var(--bg)' }}
                 >
                   Save
                 </button>
                 <button
                   onClick={() => setEditingPrice(false)}
-                  className="flex-1 py-1.5 rounded-lg text-[10px] font-mono border border-border text-muted"
+                  className="flex-1 py-1.5 rounded-lg text-[10px] font-sans border border-border text-muted"
                 >
                   Cancel
                 </button>
@@ -518,7 +558,7 @@ export default function Settings() {
                   await updateSettings({ defaultPurchaseType: pt })
                   setSettings((prev) => ({ ...prev, defaultPurchaseType: pt }))
                 }}
-                className="flex-1 py-2 rounded-xl text-xs font-mono border transition-all duration-150 capitalize"
+                className="flex-1 py-2 rounded-xl text-xs font-sans border transition-all duration-150 capitalize"
                 style={{
                   background: pendingPurchaseType === pt ? 'rgba(0,229,160,0.12)' : 'var(--surface-2)',
                   color: pendingPurchaseType === pt ? 'var(--accent)' : 'var(--muted)',
@@ -538,7 +578,7 @@ export default function Settings() {
               <button
                 key={c}
                 onClick={() => handleCurrencySelect(c)}
-                className="flex-1 py-2 rounded-xl text-xs font-mono border transition-all duration-150"
+                className="flex-1 py-2 rounded-xl text-xs font-sans border transition-all duration-150"
                 style={{
                   background: (settings.currency ?? 'INR') === c ? 'rgba(0,229,160,0.12)' : 'var(--surface-2)',
                   color: (settings.currency ?? 'INR') === c ? 'var(--accent)' : 'var(--muted)',
@@ -558,118 +598,35 @@ export default function Settings() {
             <button
               onClick={handlePrintReport}
               disabled={generating}
-              className="flex-1 py-2 rounded-xl text-xs font-mono border border-border bg-surface-2 text-muted disabled:opacity-50"
+              className="flex-1 py-2 rounded-xl text-xs font-sans border border-border bg-surface-2 text-muted disabled:opacity-50"
             >
               {generating ? '...' : 'Monthly report'}
             </button>
             <button
               onClick={handleShareCard}
               disabled={generating}
-              className="flex-1 py-2 rounded-xl text-xs font-mono border border-border bg-surface-2 text-muted disabled:opacity-50"
+              className="flex-1 py-2 rounded-xl text-xs font-sans border border-border bg-surface-2 text-muted disabled:opacity-50"
             >
               {generating ? '...' : 'Share card'}
             </button>
           </div>
 
-          {/* Export row */}
-          <div className="flex gap-2 mb-2">
-            <button
-              onClick={handleExportJSON}
-              className="flex-1 py-2 rounded-xl text-xs font-mono border border-border bg-surface-2 text-muted"
-            >
-              Export JSON
-            </button>
-            <button
-              onClick={handleExportCSV}
-              className="flex-1 py-2 rounded-xl text-xs font-mono border border-border bg-surface-2 text-muted"
-            >
-              Export CSV
-            </button>
-          </div>
-
-          <button
-            onClick={() => importInputRef.current?.click()}
-            className="w-full py-2 rounded-xl text-xs font-mono border border-border bg-surface-2 text-muted mb-2"
-          >
-            Import JSON backup
-          </button>
-          <input
-            ref={importInputRef}
-            type="file"
-            accept=".json"
-            className="hidden"
-            onChange={handleImport}
-          />
-
-          {importStatus && (
-            <div
-              className="text-[10px] font-mono px-3 py-2 rounded-lg mb-2"
-              style={{
-                background: importStatus === 'ok' ? 'rgba(0,229,160,0.08)' : 'rgba(255,85,119,0.08)',
-                color: importStatus === 'ok' ? 'var(--accent)' : 'var(--danger)',
-              }}
-            >
-              {importMsg}
-            </div>
-          )}
-
-          {/* Auto folder backup */}
-          <div
-            className="pt-3 mt-1"
-            style={{ borderTop: '1px solid var(--border)' }}
-          >
-            <div className="flex items-center justify-between mb-2">
-              <div>
-                <span className="text-muted text-xs font-mono">Auto-backup to folder</span>
-                {lastBackupAt && (
-                  <div className="text-[10px] font-mono mt-0.5" style={{ color: 'var(--dim)' }}>
-                    last: {new Date(lastBackupAt).toLocaleDateString()}
-                  </div>
-                )}
+          {/* Backup is automatic via your account — no files to manage */}
+          <div className="pt-3 mt-1" style={{ borderTop: '1px solid var(--border)' }}>
+            {auth.user ? (
+              <div className="flex items-start gap-2.5">
+                <span className="mt-1.5 w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: 'var(--success)' }} />
+                <p className="text-xs font-sans leading-relaxed" style={{ color: 'var(--muted)' }}>
+                  Your data is backed up to your account and synced automatically across your devices. Nothing to export or manage.
+                </p>
               </div>
-              <Toggle value={autoBackupEnabled} onChange={(v) => v ? handleEnableAutoBackup() : handleDisableAutoBackup()} />
-            </div>
-
-            {autoBackupEnabled && isFSASupported() && (
-              <div className="flex gap-2">
-                <button
-                  onClick={handleManualBackupNow}
-                  className="flex-1 py-2 rounded-xl text-xs font-mono border"
-                  style={{ borderColor: 'var(--border)', background: 'var(--surface-2)', color: 'var(--muted)' }}
-                >
-                  Backup now
-                </button>
-                <button
-                  onClick={handleEnableAutoBackup}
-                  className="flex-1 py-2 rounded-xl text-xs font-mono border"
-                  style={{ borderColor: 'var(--border)', background: 'var(--surface-2)', color: 'var(--muted)' }}
-                >
-                  Change folder
-                </button>
-              </div>
+            ) : (
+              <button onClick={() => navigate('/account')} className="w-full text-left">
+                <p className="text-xs font-sans leading-relaxed" style={{ color: 'var(--muted)' }}>
+                  <span style={{ color: 'var(--accent)' }}>Sign in</span> to back up your data to the cloud and keep it synced across devices.
+                </p>
+              </button>
             )}
-
-            {!isFSASupported() && (
-              <p className="text-[10px] font-mono mt-1" style={{ color: 'var(--dim)' }}>
-                Folder backup requires Chrome or Edge. Use Export JSON on Safari.
-              </p>
-            )}
-
-            {backupStatus === 'ok' && (
-              <p className="text-[10px] font-mono mt-1" style={{ color: 'var(--accent)' }}>Backup saved.</p>
-            )}
-            {backupStatus === 'err' && (
-              <p className="text-[10px] font-mono mt-1" style={{ color: 'var(--danger)' }}>Backup failed. Check folder permissions.</p>
-            )}
-          </div>
-
-          {/* Backup reminder toggle */}
-          <div
-            className="flex items-center justify-between pt-3 mt-1"
-            style={{ borderTop: '1px solid var(--border)' }}
-          >
-            <span className="text-muted text-xs font-mono">Export reminder (30 days)</span>
-            <Toggle value={backupReminder} onChange={toggleBackupReminder} />
           </div>
 
           {/* Danger zone */}
@@ -677,7 +634,7 @@ export default function Settings() {
             {clearStep === 0 && (
               <button
                 onClick={handleClearStep}
-                className="w-full py-2 rounded-xl text-xs font-mono border transition-all duration-150"
+                className="w-full py-2 rounded-xl text-xs font-sans border transition-all duration-150"
                 style={{ borderColor: 'rgba(255,85,119,0.3)', color: 'var(--danger)', background: 'transparent' }}
               >
                 Clear all data
@@ -685,17 +642,17 @@ export default function Settings() {
             )}
             {clearStep === 1 && (
               <div className="space-y-2">
-                <p className="text-danger text-[10px] font-mono text-center">This will erase everything. Continue?</p>
+                <p className="text-danger text-[10px] font-sans text-center">This will erase everything. Continue?</p>
                 <div className="flex gap-2">
                   <button
                     onClick={() => setClearStep(0)}
-                    className="flex-1 py-2 rounded-xl text-xs font-mono border border-border text-muted bg-surface-2"
+                    className="flex-1 py-2 rounded-xl text-xs font-sans border border-border text-muted bg-surface-2"
                   >
                     Cancel
                   </button>
                   <button
                     onClick={handleClearStep}
-                    className="flex-1 py-2 rounded-xl text-xs font-mono"
+                    className="flex-1 py-2 rounded-xl text-xs font-sans"
                     style={{ background: 'rgba(255,85,119,0.12)', color: 'var(--danger)', border: '1px solid rgba(255,85,119,0.3)' }}
                   >
                     Yes, continue
@@ -705,17 +662,17 @@ export default function Settings() {
             )}
             {clearStep === 2 && (
               <div className="space-y-2">
-                <p className="text-danger text-[10px] font-mono text-center">Final confirmation. All data will be deleted.</p>
+                <p className="text-danger text-[10px] font-sans text-center">Final confirmation. All data will be deleted.</p>
                 <div className="flex gap-2">
                   <button
                     onClick={() => setClearStep(0)}
-                    className="flex-1 py-2 rounded-xl text-xs font-mono border border-border text-muted bg-surface-2"
+                    className="flex-1 py-2 rounded-xl text-xs font-sans border border-border text-muted bg-surface-2"
                   >
                     Cancel
                   </button>
                   <button
                     onClick={handleClearStep}
-                    className="flex-1 py-2 rounded-xl text-xs font-mono"
+                    className="flex-1 py-2 rounded-xl text-xs font-sans"
                     style={{ background: 'var(--danger)', color: 'var(--bg)' }}
                   >
                     Delete everything
@@ -728,8 +685,8 @@ export default function Settings() {
 
         {/* ── About ── */}
         <div className="text-center pb-2 space-y-1">
-          <p className="text-dim text-[10px] font-mono">Smoking Tracker v0.1.0</p>
-          <p className="text-dim text-[10px] font-mono">Privacy-first. All data stays on your device.</p>
+          <p className="text-dim text-[10px] font-sans">Smoking Tracker v0.1.0</p>
+          <p className="text-dim text-[10px] font-sans">Privacy-first. All data stays on your device.</p>
         </div>
 
       </div>
@@ -747,20 +704,20 @@ export default function Settings() {
       {/* Currency warning modal */}
       {showCurrencyWarning && (
         <Modal>
-          <p className="text-text text-sm font-mono font-medium mb-1">Change currency?</p>
-          <p className="text-muted text-xs font-mono mb-4 leading-relaxed">
+          <p className="text-text text-sm font-sans font-medium mb-1">Change currency?</p>
+          <p className="text-muted text-xs font-sans mb-4 leading-relaxed">
             Existing cost history will not be recalculated. Only new logs will use {pendingCurrency}.
           </p>
           <div className="flex gap-2">
             <button
               onClick={() => { setShowCurrencyWarning(false); setPendingCurrency(null) }}
-              className="flex-1 py-2 rounded-xl text-xs font-mono border border-border text-muted bg-surface-2"
+              className="flex-1 py-2 rounded-xl text-xs font-sans border border-border text-muted bg-surface-2"
             >
               Cancel
             </button>
             <button
               onClick={confirmCurrencyChange}
-              className="flex-1 py-2 rounded-xl text-xs font-mono"
+              className="flex-1 py-2 rounded-xl text-xs font-sans"
               style={{ background: 'var(--accent)', color: 'var(--bg)' }}
             >
               Change to {pendingCurrency}
@@ -779,7 +736,7 @@ export default function Settings() {
 function Section({ title, children }) {
   return (
     <div className="rounded-2xl border border-border bg-surface p-4">
-      <div className="text-[10px] font-mono font-medium text-muted tracking-widest uppercase mb-3">{title}</div>
+      <div className="text-[10px] font-sans font-medium text-muted tracking-widest uppercase mb-3">{title}</div>
       {children}
     </div>
   )
@@ -789,7 +746,7 @@ function StepperButton({ onClick, children }) {
   return (
     <button
       onClick={onClick}
-      className="w-8 h-8 rounded-lg border border-border bg-surface-2 text-muted font-mono text-base flex items-center justify-center"
+      className="w-8 h-8 rounded-lg border border-border bg-surface-2 text-muted font-sans text-base flex items-center justify-center"
     >
       {children}
     </button>
@@ -799,12 +756,12 @@ function StepperButton({ onClick, children }) {
 function PriceField({ label, value, onChange }) {
   return (
     <div className="flex-1">
-      <div className="text-dim text-[9px] font-mono mb-1">{label}</div>
+      <div className="text-dim text-[9px] font-sans mb-1">{label}</div>
       <input
         type="number"
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full bg-surface-2 border border-border rounded-lg px-2 py-1.5 text-xs font-mono text-text outline-none focus:border-accent"
+        className="w-full bg-surface-2 border border-border rounded-lg px-2 py-1.5 text-xs font-sans text-text outline-none focus:border-accent"
         style={{ WebkitAppearance: 'none', MozAppearance: 'textfield' }}
       />
     </div>
@@ -841,10 +798,10 @@ function GoalQuitModal({ currentReason, isChangingReason, onConfirm, onCancel })
 
   return (
     <Modal>
-      <p className="text-text text-sm font-mono font-medium mb-1">
+      <p className="text-text text-sm font-sans font-medium mb-1">
         {isChangingReason ? 'Change your reason' : 'Why are you quitting?'}
       </p>
-      <p className="text-muted text-[10px] font-mono mb-4 leading-relaxed">
+      <p className="text-muted text-[10px] font-sans mb-4 leading-relaxed">
         {isChangingReason
           ? 'Update what keeps you going on hard days.'
           : 'A clear reason helps on hard days. You can change it anytime.'}
@@ -855,7 +812,7 @@ function GoalQuitModal({ currentReason, isChangingReason, onConfirm, onCancel })
           <button
             key={opt.key}
             onClick={() => setSelected(opt.key)}
-            className="py-2 px-3 rounded-xl text-xs font-mono border transition-all duration-150"
+            className="py-2 px-3 rounded-xl text-xs font-sans border transition-all duration-150"
             style={{
               background: selected === opt.key ? 'rgba(167,139,250,0.14)' : 'var(--surface-2)',
               color: selected === opt.key ? 'var(--accent)' : 'var(--muted)',
@@ -870,14 +827,14 @@ function GoalQuitModal({ currentReason, isChangingReason, onConfirm, onCancel })
       <div className="flex gap-2">
         <button
           onClick={onCancel}
-          className="flex-1 py-2 rounded-xl text-xs font-mono border border-border text-muted bg-surface-2"
+          className="flex-1 py-2 rounded-xl text-xs font-sans border border-border text-muted bg-surface-2"
         >
           Cancel
         </button>
         <button
           onClick={() => onConfirm(selected)}
           disabled={!selected}
-          className="flex-1 py-2 rounded-xl text-xs font-mono transition-all"
+          className="flex-1 py-2 rounded-xl text-xs font-sans transition-all"
           style={{
             background: selected ? 'var(--accent)' : 'var(--surface-2)',
             color: selected ? 'var(--bg)' : 'var(--dim)',

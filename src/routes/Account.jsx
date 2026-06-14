@@ -3,7 +3,37 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import {
   startPhoneSignIn, confirmPhoneCode, startEmailSignIn, signOut, resetRecaptcha,
+  signInWithGoogle, signInWithApple,
 } from '../lib/auth'
+
+function GoogleGlyph() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true">
+      <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+      <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+      <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+      <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+    </svg>
+  )
+}
+
+function AppleGlyph() {
+  return (
+    <svg width="16" height="18" viewBox="0 0 24 24" fill="#FFFFFF" aria-hidden="true">
+      <path d="M17.05 12.5c-.03-2.5 2.04-3.7 2.13-3.76-1.16-1.7-2.97-1.93-3.61-1.96-1.54-.16-3 .9-3.78.9-.78 0-1.98-.88-3.26-.85-1.68.02-3.23.97-4.09 2.47-1.74 3.02-.45 7.5 1.25 9.95.83 1.2 1.82 2.55 3.12 2.5 1.25-.05 1.72-.81 3.23-.81 1.51 0 1.93.81 3.26.78 1.35-.02 2.2-1.22 3.02-2.43.95-1.39 1.34-2.74 1.36-2.81-.03-.01-2.61-1-2.64-3.97zM14.6 4.97c.69-.83 1.15-1.99 1.02-3.14-.99.04-2.18.66-2.89 1.49-.64.73-1.2 1.9-1.05 3.02 1.1.09 2.23-.56 2.92-1.37z"/>
+    </svg>
+  )
+}
+
+const socialBtn = {
+  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
+  borderRadius: 12, padding: '13px 16px', fontSize: 15, fontWeight: 600,
+  width: '100%', cursor: 'pointer',
+}
+const googleBtn = { ...socialBtn, background: '#FFFFFF', color: '#1F1F1F', border: '1px solid #DADCE0' }
+const appleBtn = { ...socialBtn, background: '#000000', color: '#FFFFFF', border: '1px solid #000000' }
+const orRow = { display: 'flex', alignItems: 'center', gap: 12, margin: '18px 0', color: 'var(--dim)', fontSize: 12 }
+const orLine = { flex: 1, height: 1, background: 'var(--border)' }
 
 const card = {
   background: 'var(--surface)',
@@ -95,6 +125,21 @@ export default function Account() {
     } finally { setBusy(false) }
   }
 
+  async function oauth(fn) {
+    setError(''); setBusy(true)
+    try {
+      await fn()
+      navigate('/')
+    } catch (e) {
+      const code = e?.code || ''
+      if (code === 'auth/popup-closed-by-user' || code === 'auth/cancelled-popup-request') {
+        // user dismissed the popup — no error to show
+      } else {
+        setError(e?.message || 'Sign-in failed. Please try again.')
+      }
+    } finally { setBusy(false) }
+  }
+
   const wrap = { minHeight: '100%', background: 'var(--bg)', color: 'var(--text)', padding: '28px 20px 48px' }
 
   // Cloud not configured yet -> local-only explainer
@@ -121,7 +166,7 @@ export default function Account() {
         <p style={{ color: 'var(--muted)', marginBottom: 24 }}>Backup is on. Your data is safe if you change phones.</p>
         <div style={{ ...card, padding: 18, marginBottom: 16 }}>
           <div style={{ color: 'var(--muted)', fontSize: 13, marginBottom: 4 }}>Signed in via {user.method}</div>
-          <div style={{ fontSize: 18 }}>{user.phone || user.email}</div>
+          <div style={{ fontSize: 18 }}>{user.name || user.phone || user.email}</div>
           <div style={{ marginTop: 12, fontSize: 13, color: status === 'synced' ? 'var(--success)' : 'var(--muted)' }}>
             {status === 'synced' ? 'All changes synced' : status === 'syncing' ? 'Syncing...' : status === 'error' ? 'Sync error - will retry' : ''}
           </div>
@@ -139,10 +184,21 @@ export default function Account() {
     <div style={wrap}>
       <button onClick={() => navigate(-1)} style={{ ...btnGhost, width: 'auto', marginBottom: 20 }}>Back</button>
       <h1 className="heading-lg" style={{ fontSize: 26, marginBottom: 6 }}>Save your progress</h1>
-      <p style={{ color: 'var(--muted)', marginBottom: 24, lineHeight: 1.5, maxWidth: 440 }}>
-        Add a phone number so your streaks and history survive a phone change. We only use it to
-        sign you in. No password to remember.
+      <p style={{ color: 'var(--muted)', marginBottom: 18, lineHeight: 1.5, maxWidth: 440 }}>
+        Sign in so your streaks and history survive a phone change. Pick whichever is easiest —
+        no password to remember.
       </p>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <button onClick={() => oauth(signInWithGoogle)} disabled={busy} style={{ ...googleBtn, opacity: busy ? 0.6 : 1 }}>
+          <GoogleGlyph /> Continue with Google
+        </button>
+        <button onClick={() => oauth(signInWithApple)} disabled={busy} style={{ ...appleBtn, opacity: busy ? 0.6 : 1 }}>
+          <AppleGlyph /> Continue with Apple
+        </button>
+      </div>
+
+      <div style={orRow}><span style={orLine} />or<span style={orLine} /></div>
 
       {mode === 'phone' && !confirmation && (
         <div style={{ ...card, padding: 18, display: 'flex', flexDirection: 'column', gap: 16 }}>

@@ -88,7 +88,7 @@ export default function Onboarding({ onComplete }) {
         <h1 className="font-display text-3xl text-text leading-snug">
           A quiet tracker for the habit you're working on.
         </h1>
-        <p className="text-muted text-sm mt-4 font-mono">
+        <p className="text-muted text-sm mt-4 font-sans">
           Your data never leaves this device.
         </p>
       </div>
@@ -115,7 +115,7 @@ export default function Onboarding({ onComplete }) {
                 : 'border-border bg-surface-2'
             }`}
           >
-            <div className={`font-mono text-sm font-medium ${goal === g.key ? 'text-accent' : 'text-text'}`}>
+            <div className={`font-sans text-sm font-medium ${goal === g.key ? 'text-accent' : 'text-text'}`}>
               {g.label}
             </div>
             <div className="text-muted text-xs mt-1">{g.desc}</div>
@@ -151,7 +151,7 @@ export default function Onboarding({ onComplete }) {
           +
         </button>
       </div>
-      <p className="text-muted text-xs font-mono">cigarettes per day</p>
+      <p className="text-muted text-xs font-sans">cigarettes per day</p>
       <button
         onClick={() => setStep(3)}
         className="w-full py-4 bg-accent text-bg rounded-2xl font-sans font-medium text-base"
@@ -166,14 +166,14 @@ export default function Onboarding({ onComplete }) {
 
       {/* Currency selector */}
       <div>
-        <label className="text-muted text-xs font-mono block mb-2">Currency</label>
+        <label className="text-muted text-xs font-sans block mb-2">Currency</label>
         <div className="flex gap-2">
           {CURRENCIES.map((c) => (
             <button
               key={c}
               type="button"
               onClick={() => setCurrency(c)}
-              className={`flex-1 py-2 rounded-xl border text-xs font-mono transition-all duration-150 ${
+              className={`flex-1 py-2 rounded-xl border text-xs font-sans transition-all duration-150 ${
                 currency === c
                   ? 'border-accent bg-accent-dim text-accent'
                   : 'border-border bg-surface-2 text-muted'
@@ -188,7 +188,7 @@ export default function Onboarding({ onComplete }) {
       {/* Brand chips (INR only) */}
       {isINR && (
         <div>
-          <label className="text-muted text-xs font-mono block mb-2">Select brand</label>
+          <label className="text-muted text-xs font-sans block mb-2">Select brand</label>
           <div className="flex flex-wrap gap-2">
             {INDIAN_BRANDS.map((b) => (
               <BrandChip
@@ -201,7 +201,7 @@ export default function Onboarding({ onComplete }) {
             <button
               type="button"
               onClick={handleCustomBrand}
-              className={`px-4 py-2 rounded-xl text-sm font-mono border transition-all duration-150 ${
+              className={`px-4 py-2 rounded-xl text-sm font-sans border transition-all duration-150 ${
                 selectedBrand?.name === 'Other (custom)'
                   ? 'bg-accent-dim border-accent text-accent'
                   : 'bg-surface-2 border-border text-muted'
@@ -216,13 +216,13 @@ export default function Onboarding({ onComplete }) {
       {/* Custom brand name (non-INR or "Other") */}
       {(!isINR || selectedBrand?.name === 'Other (custom)') && (
         <div>
-          <label className="text-muted text-xs font-mono block mb-2">Brand name</label>
+          <label className="text-muted text-xs font-sans block mb-2">Brand name</label>
           <input
             type="text"
             value={customBrandName}
             onChange={(e) => setCustomBrandName(e.target.value)}
             placeholder="e.g. Marlboro Red"
-            className="w-full bg-surface-2 border border-border rounded-xl px-4 py-3 text-text text-sm font-mono focus:border-accent focus:outline-none"
+            className="w-full bg-surface-2 border border-border rounded-xl px-4 py-3 text-text text-sm font-sans focus:border-accent focus:outline-none"
           />
         </div>
       )}
@@ -230,36 +230,36 @@ export default function Onboarding({ onComplete }) {
       {/* Pack price */}
       <div className="flex gap-3">
         <div className="flex-1">
-          <label className="text-muted text-xs font-mono block mb-2">Pack price</label>
+          <label className="text-muted text-xs font-sans block mb-2">Pack price</label>
           <input
             type="number"
             value={packPrice}
             onChange={(e) => setPackPrice(e.target.value)}
             placeholder="0"
-            className="w-full bg-surface-2 border border-border rounded-xl px-4 py-3 text-text text-sm font-mono focus:border-accent focus:outline-none"
+            className="w-full bg-surface-2 border border-border rounded-xl px-4 py-3 text-text text-sm font-sans focus:border-accent focus:outline-none"
           />
         </div>
         <div className="w-20">
-          <label className="text-muted text-xs font-mono block mb-2">Per pack</label>
+          <label className="text-muted text-xs font-sans block mb-2">Per pack</label>
           <input
             type="number"
             value={perPack}
             onChange={(e) => setPerPack(e.target.value)}
-            className="w-full bg-surface-2 border border-border rounded-xl px-4 py-3 text-text text-sm font-mono focus:border-accent focus:outline-none"
+            className="w-full bg-surface-2 border border-border rounded-xl px-4 py-3 text-text text-sm font-sans focus:border-accent focus:outline-none"
           />
         </div>
       </div>
 
       {/* Purchase type */}
       <div>
-        <label className="text-muted text-xs font-mono block mb-2">How do you usually buy?</label>
+        <label className="text-muted text-xs font-sans block mb-2">How do you usually buy?</label>
         <div className="flex rounded-xl border border-border overflow-hidden">
           {['pack', 'single'].map((t) => (
             <button
               key={t}
               type="button"
               onClick={() => setPurchaseType(t)}
-              className={`flex-1 py-3 text-sm font-mono capitalize transition-colors duration-150 ${
+              className={`flex-1 py-3 text-sm font-sans capitalize transition-colors duration-150 ${
                 purchaseType === t
                   ? 'bg-accent text-bg'
                   : 'bg-surface-2 text-muted'
@@ -274,13 +274,13 @@ export default function Onboarding({ onComplete }) {
       {/* Single price (if single selected) */}
       {purchaseType === 'single' && (
         <div>
-          <label className="text-muted text-xs font-mono block mb-2">Price per cigarette</label>
+          <label className="text-muted text-xs font-sans block mb-2">Price per cigarette</label>
           <input
             type="number"
             value={singlePrice}
             onChange={(e) => setSinglePrice(e.target.value)}
             placeholder="0"
-            className="w-full bg-surface-2 border border-border rounded-xl px-4 py-3 text-text text-sm font-mono focus:border-accent focus:outline-none"
+            className="w-full bg-surface-2 border border-border rounded-xl px-4 py-3 text-text text-sm font-sans focus:border-accent focus:outline-none"
           />
         </div>
       )}
@@ -297,7 +297,7 @@ export default function Onboarding({ onComplete }) {
     <div key="why" className="flex flex-col gap-6">
       <div>
         <h2 className="font-display text-2xl text-text">Why do you want to quit?</h2>
-        <p className="text-muted text-xs font-mono mt-2">Your reason will appear in your progress messages. Skip if you prefer.</p>
+        <p className="text-muted text-xs font-sans mt-2">Your reason will appear in your progress messages. Skip if you prefer.</p>
       </div>
       <div className="grid grid-cols-2 gap-2">
         {WHY_OPTIONS.map((w) => (
@@ -312,7 +312,7 @@ export default function Onboarding({ onComplete }) {
               color: quitReason === w.key ? 'var(--accent)' : 'var(--muted)',
             }}
           >
-            <span className="font-mono text-sm">{w.label}</span>
+            <span className="font-sans text-sm">{w.label}</span>
           </button>
         ))}
       </div>
@@ -328,7 +328,7 @@ export default function Onboarding({ onComplete }) {
     <div key="done" className="flex flex-col gap-8">
       <div>
         <h2 className="font-display text-3xl text-text">You're set.</h2>
-        <p className="text-muted text-sm mt-3 font-mono leading-relaxed">
+        <p className="text-muted text-sm mt-3 font-sans leading-relaxed">
           A few things worth knowing:
         </p>
         <div className="mt-4 flex flex-col gap-3">
@@ -339,7 +339,7 @@ export default function Onboarding({ onComplete }) {
           ].map(({ dot, text }, i) => (
             <div key={i} className="flex items-start gap-3">
               <div className="w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0" style={{ background: dot }} />
-              <p className="text-muted text-xs font-mono leading-relaxed">{text}</p>
+              <p className="text-muted text-xs font-sans leading-relaxed">{text}</p>
             </div>
           ))}
         </div>

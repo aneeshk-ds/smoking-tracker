@@ -8,7 +8,7 @@ function Chip({ value, selected, onToggle }) {
     <button
       type="button"
       onClick={() => onToggle(value)}
-      className="px-3 py-1.5 rounded-xl text-xs font-mono border transition-all"
+      className="px-3 py-1.5 rounded-xl text-xs font-sans border transition-all"
       style={{
         borderColor: selected ? 'var(--accent)' : 'var(--border)',
         background: selected ? 'rgba(0,229,160,0.08)' : 'var(--surface-2)',
@@ -57,7 +57,7 @@ export default function EditEntryModal({ entry, settings, onSave, onClose }) {
         <div className="flex items-center justify-between mb-6">
           <div>
             <h2 className="font-display text-lg" style={{ color: 'var(--text)' }}>Edit entry</h2>
-            <p className="text-xs font-mono mt-0.5" style={{ color: 'var(--muted)' }}>{timeLabel}</p>
+            <p className="text-xs font-sans mt-0.5" style={{ color: 'var(--muted)' }}>{timeLabel}</p>
           </div>
           <button onClick={onClose} style={{ color: 'var(--muted)' }}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -70,7 +70,7 @@ export default function EditEntryModal({ entry, settings, onSave, onClose }) {
           {/* Brand */}
           {settings?.brands?.length > 0 && (
             <div>
-              <label className="text-xs font-mono block mb-2" style={{ color: 'var(--muted)' }}>Brand</label>
+              <label className="text-xs font-sans block mb-2" style={{ color: 'var(--muted)' }}>Brand</label>
               <div className="flex flex-wrap gap-2">
                 {settings.brands.map((b) => (
                   <Chip key={b.name} value={b.name} selected={brand === b.name} onToggle={(v) => setBrand(brand === v ? '' : v)} />
@@ -81,11 +81,11 @@ export default function EditEntryModal({ entry, settings, onSave, onClose }) {
 
           {/* Location */}
           <div>
-            <label className="text-xs font-mono block mb-2" style={{ color: 'var(--muted)' }}>Location</label>
+            <label className="text-xs font-sans block mb-2" style={{ color: 'var(--muted)' }}>Location</label>
             <select
               value={location ?? ''}
               onChange={(e) => setLocation(e.target.value || null)}
-              className="w-full px-4 py-3 rounded-xl text-sm font-mono border appearance-none"
+              className="w-full px-4 py-3 rounded-xl text-sm font-sans border appearance-none"
               style={{
                 background: 'var(--surface-2)',
                 borderColor: location ? 'var(--accent)' : 'var(--border)',
@@ -99,11 +99,11 @@ export default function EditEntryModal({ entry, settings, onSave, onClose }) {
 
           {/* Mood */}
           <div>
-            <label className="text-xs font-mono block mb-2" style={{ color: 'var(--muted)' }}>Mood</label>
+            <label className="text-xs font-sans block mb-2" style={{ color: 'var(--muted)' }}>Mood</label>
             <select
               value={mood ?? ''}
               onChange={(e) => setMood(e.target.value || null)}
-              className="w-full px-4 py-3 rounded-xl text-sm font-mono border appearance-none"
+              className="w-full px-4 py-3 rounded-xl text-sm font-sans border appearance-none"
               style={{
                 background: 'var(--surface-2)',
                 borderColor: mood ? 'var(--accent)' : 'var(--border)',
@@ -117,11 +117,11 @@ export default function EditEntryModal({ entry, settings, onSave, onClose }) {
 
           {/* Trigger */}
           <div>
-            <label className="text-xs font-mono block mb-2" style={{ color: 'var(--muted)' }}>Trigger</label>
+            <label className="text-xs font-sans block mb-2" style={{ color: 'var(--muted)' }}>Trigger</label>
             <select
               value={trigger ?? ''}
               onChange={(e) => setTrigger(e.target.value || null)}
-              className="w-full px-4 py-3 rounded-xl text-sm font-mono border appearance-none"
+              className="w-full px-4 py-3 rounded-xl text-sm font-sans border appearance-none"
               style={{
                 background: 'var(--surface-2)',
                 borderColor: trigger ? 'var(--accent)' : 'var(--border)',
@@ -135,7 +135,7 @@ export default function EditEntryModal({ entry, settings, onSave, onClose }) {
 
           {/* Craving */}
           <div>
-            <label className="text-xs font-mono block mb-2" style={{ color: 'var(--muted)' }}>
+            <label className="text-xs font-sans block mb-2" style={{ color: 'var(--muted)' }}>
               Craving: {craving !== null ? craving : 'not set'}
             </label>
             <input
@@ -144,7 +144,7 @@ export default function EditEntryModal({ entry, settings, onSave, onClose }) {
               onChange={(e) => setCraving(parseInt(e.target.value))}
               className="w-full accent-[var(--accent)]"
             />
-            <div className="flex justify-between text-xs font-mono mt-1" style={{ color: 'var(--dim)' }}>
+            <div className="flex justify-between text-xs font-sans mt-1" style={{ color: 'var(--dim)' }}>
               <span>1 mild</span><span>10 intense</span>
             </div>
           </div>

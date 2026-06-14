@@ -5,7 +5,7 @@ const HOUR_LABELS = ['12a', '3a', '6a', '9a', '12p', '3p', '6p', '9p']
 
 export default function Heatmap({ grid }) {
   if (!grid || !grid.length) {
-    return <p className="text-dim text-xs font-mono">No data yet.</p>
+    return <p className="text-dim text-xs font-sans">No data yet.</p>
   }
 
   const maxVal = Math.max(1, ...grid.flat())
@@ -30,14 +30,14 @@ export default function Heatmap({ grid }) {
       {/* Hour axis labels */}
       <div className="flex mb-1 ml-8">
         {HOUR_LABELS.map((l, i) => (
-          <span key={i} className="text-dim text-[9px] font-mono flex-1 text-center">{l}</span>
+          <span key={i} className="text-dim text-[9px] font-sans flex-1 text-center">{l}</span>
         ))}
       </div>
 
       {/* Grid rows */}
       {grid.map((row, dayIdx) => (
         <div key={dayIdx} className="flex items-center gap-[2px] mb-[2px]">
-          <span className="text-dim text-[9px] font-mono w-7 text-right pr-1 shrink-0">
+          <span className="text-dim text-[9px] font-sans w-7 text-right pr-1 shrink-0">
             {DAYS[dayIdx]}
           </span>
           {row.map((val, hourIdx) => {
@@ -62,7 +62,7 @@ export default function Heatmap({ grid }) {
       ))}
 
       {peakLabel && (
-        <p className="text-dim text-[10px] font-mono mt-2">{peakLabel}</p>
+        <p className="text-dim text-[10px] font-sans mt-2">{peakLabel}</p>
       )}
     </div>
   )

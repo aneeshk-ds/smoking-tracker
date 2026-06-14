@@ -32,7 +32,7 @@ export default function TodayLog({ refreshKey, onChanged }) {
           onClick={() => setOpen((v) => !v)}
           className="flex items-center justify-between w-full py-2"
         >
-          <span className="text-xs font-mono tracking-widest uppercase" style={{ color: 'var(--muted)' }}>
+          <span className="text-xs font-sans tracking-widest uppercase" style={{ color: 'var(--muted)' }}>
             Today's log ({entries.length})
           </span>
           <svg
@@ -50,7 +50,7 @@ export default function TodayLog({ refreshKey, onChanged }) {
 
         {open && (
           <div className="flex flex-col gap-2 mt-2">
-            <p className="text-[10px] font-mono px-1 mb-1" style={{ color: 'var(--dim)' }}>
+            <p className="text-[10px] font-sans px-1 mb-1" style={{ color: 'var(--dim)' }}>
               tap the pencil to add trigger, mood, or location details
             </p>
             {entries.map((e) => (
@@ -60,11 +60,11 @@ export default function TodayLog({ refreshKey, onChanged }) {
                 style={{ background: 'var(--surface-2)', border: '1px solid var(--border)' }}
               >
                 <div>
-                  <span className="text-xs font-mono" style={{ color: 'var(--text)' }}>
+                  <span className="text-xs font-sans" style={{ color: 'var(--text)' }}>
                     {format(new Date(e.timestamp), 'h:mm a')}
                   </span>
                   {(e.brand || e.location || e.trigger) && (
-                    <div className="text-[10px] font-mono mt-0.5" style={{ color: 'var(--dim)' }}>
+                    <div className="text-[10px] font-sans mt-0.5" style={{ color: 'var(--dim)' }}>
                       {[e.brand, e.location, e.trigger].filter(Boolean).join(' · ')}
                     </div>
                   )}

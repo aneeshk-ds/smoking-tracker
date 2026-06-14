@@ -16,15 +16,15 @@ function InsightRow({ insight }) {
           className="w-1.5 h-1.5 rounded-full flex-shrink-0"
           style={{ background: dot.color }}
         />
-        <span className="text-[11px] font-mono tracking-wide" style={{ color: 'var(--dim)' }}>
+        <span className="text-[11px] font-sans tracking-wide" style={{ color: 'var(--dim)' }}>
           {insight.label}
         </span>
       </div>
       <div className="flex items-baseline gap-1.5">
-        <span className="text-sm font-mono" style={{ color: 'var(--text)' }}>
+        <span className="text-sm font-sans" style={{ color: 'var(--text)' }}>
           {insight.value}
         </span>
-        <span className="text-[10px] font-mono" style={{ color: 'var(--dim)' }}>
+        <span className="text-[10px] font-sans" style={{ color: 'var(--dim)' }}>
           {insight.detail}
         </span>
       </div>
@@ -55,10 +55,10 @@ export default function InsightCard({ refreshKey }) {
         style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}
       >
         <div className="flex items-center justify-between mb-2">
-          <span className="text-[10px] font-mono tracking-widest uppercase" style={{ color: 'var(--dim)' }}>
+          <span className="text-[10px] font-sans tracking-widest uppercase" style={{ color: 'var(--dim)' }}>
             your pattern
           </span>
-          <span className="text-[10px] font-mono" style={{ color: 'var(--dim)' }}>
+          <span className="text-[10px] font-sans" style={{ color: 'var(--dim)' }}>
             {count}/{needed} entries
           </span>
         </div>
@@ -68,7 +68,7 @@ export default function InsightCard({ refreshKey }) {
             style={{ width: `${pct}%`, background: 'var(--accent)', opacity: 0.4 }}
           />
         </div>
-        <p className="text-[11px] font-mono leading-relaxed" style={{ color: 'var(--dim)' }}>
+        <p className="text-[11px] font-sans leading-relaxed" style={{ color: 'var(--dim)' }}>
           add trigger &amp; location details when logging — your patterns will surface here after {needed} entries
         </p>
       </div>
@@ -86,10 +86,10 @@ export default function InsightCard({ refreshKey }) {
       }}
     >
       <div className="flex items-center justify-between mb-1">
-        <span className="text-[10px] font-mono tracking-widest uppercase" style={{ color: 'var(--dim)' }}>
+        <span className="text-[10px] font-sans tracking-widest uppercase" style={{ color: 'var(--dim)' }}>
           your pattern
         </span>
-        <span className="text-[10px] font-mono" style={{ color: 'var(--dim)' }}>
+        <span className="text-[10px] font-sans" style={{ color: 'var(--dim)' }}>
           {totalEntries} entries
         </span>
       </div>
@@ -101,7 +101,7 @@ export default function InsightCard({ refreshKey }) {
       ))}
 
       <div
-        className="text-[9px] font-mono mt-1 pt-1.5 border-t"
+        className="text-[9px] font-sans mt-1 pt-1.5 border-t"
         style={{ color: 'var(--dim)', borderColor: 'var(--border)' }}
       >
         computed on-device · your data never leaves this phone

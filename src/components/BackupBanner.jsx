@@ -30,7 +30,7 @@ export default function BackupBanner() {
         }}
       >
         <div className="flex-1 min-w-0">
-          <p className="text-danger text-[10px] font-mono">
+          <p className="text-danger text-[10px] font-sans">
             {daysSince
               ? `No backup in ${daysSince} days.`
               : 'You have not exported your data yet.'}{' '}

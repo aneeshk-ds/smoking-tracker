@@ -1,7 +1,7 @@
 // Side-by-side weekday vs weekend stat blocks
 
 export default function WeekdayWeekendSplit({ data }) {
-  if (!data) return <p className="text-dim text-xs font-mono">No data yet.</p>
+  if (!data) return <p className="text-dim text-xs font-sans">No data yet.</p>
 
   const { weekday, weekend } = data
   const higher = weekday.avg > weekend.avg ? 'weekday' : weekend.avg > weekday.avg ? 'weekend' : null
@@ -33,15 +33,15 @@ function StatCard({ label, avg, total, highlight }) {
         backgroundColor: highlight ? 'rgba(255,85,119,0.06)' : 'var(--surface-2)',
       }}
     >
-      <div className="text-muted text-[10px] font-mono mb-1">{label}</div>
+      <div className="text-muted text-[10px] font-sans mb-1">{label}</div>
       <div
         className="font-display text-2xl"
         style={{ color: highlight ? 'var(--danger)' : 'var(--text)' }}
       >
         {avg}
       </div>
-      <div className="text-dim text-[10px] font-mono">avg / day</div>
-      <div className="text-muted text-[10px] font-mono mt-1">{total} total</div>
+      <div className="text-dim text-[10px] font-sans">avg / day</div>
+      <div className="text-muted text-[10px] font-sans mt-1">{total} total</div>
     </div>
   )
 }

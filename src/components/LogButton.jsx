@@ -53,18 +53,18 @@ export default function LogButton({ onLogged, onLongPress }) {
       disabled={logging}
       style={{
         transform: pressing ? 'scale(0.96)' : 'scale(1)',
+        opacity: logging ? 0.6 : 1,
         transition: 'transform 100ms ease',
       }}
       className={`
         w-full py-4 rounded-2xl font-sans text-base font-medium tracking-wide
         flex items-center justify-center gap-2
         border-0 outline-none cursor-pointer select-none
-        ${logging ? 'bg-accent/60 text-bg/60' : 'bg-accent text-bg'}
-        active:bg-accent/90
+        bg-accent text-bg
       `}
     >
       {logging ? (
-        <span className="font-mono text-sm">logged</span>
+        <span className="font-sans text-sm">logged</span>
       ) : (
         <>
           {/* Cigarette icon — angled slightly, filter on right, ember + smoke on left */}

@@ -43,7 +43,7 @@ export default function EquivalentLine() {
   if (!text) return null
 
   return (
-    <p className="text-dim text-xs font-mono mt-1 transition-opacity duration-500">
+    <p className="text-dim text-xs font-sans mt-1 transition-opacity duration-500">
       {text}
     </p>
   )

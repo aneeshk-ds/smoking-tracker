@@ -12,7 +12,7 @@ function Delta({ current, previous, label }) {
   const down = diff < 0
   return (
     <span
-      className="text-[10px] font-mono ml-1"
+      className="text-[10px] font-sans ml-1"
       style={{ color: down ? 'var(--accent)' : 'var(--danger)' }}
     >
       {down ? '↓' : '↑'}{pct}%
@@ -40,7 +40,7 @@ export default function WeekMonthSnapshot() {
     >
       {/* This week */}
       <div className="flex-1 border-r pr-4" style={{ borderColor: 'var(--border)' }}>
-        <div className="text-[10px] font-mono tracking-widest uppercase mb-1" style={{ color: 'var(--muted)' }}>
+        <div className="text-[10px] font-sans tracking-widest uppercase mb-1" style={{ color: 'var(--muted)' }}>
           This week
         </div>
         <div className="flex items-baseline gap-1">
@@ -49,14 +49,14 @@ export default function WeekMonthSnapshot() {
           </span>
           <Delta current={week.thisWeek} previous={week.lastWeek} />
         </div>
-        <div className="text-[10px] font-mono mt-0.5" style={{ color: 'var(--dim)' }}>
+        <div className="text-[10px] font-sans mt-0.5" style={{ color: 'var(--dim)' }}>
           last: {week.lastWeek}
         </div>
       </div>
 
       {/* This month */}
       <div className="flex-1 pl-4">
-        <div className="text-[10px] font-mono tracking-widest uppercase mb-1" style={{ color: 'var(--muted)' }}>
+        <div className="text-[10px] font-sans tracking-widest uppercase mb-1" style={{ color: 'var(--muted)' }}>
           This month
         </div>
         <div className="flex items-baseline gap-1">
@@ -65,7 +65,7 @@ export default function WeekMonthSnapshot() {
           </span>
           <Delta current={month.thisMonth} previous={month.lastMonth} />
         </div>
-        <div className="text-[10px] font-mono mt-0.5" style={{ color: 'var(--dim)' }}>
+        <div className="text-[10px] font-sans mt-0.5" style={{ color: 'var(--dim)' }}>
           last: {month.lastMonth}
         </div>
       </div>

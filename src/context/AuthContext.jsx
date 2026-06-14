@@ -1,7 +1,7 @@
 // Auth + sync wiring. Provides the current user, sync status, and a guest flag
 // to the whole app. When configured and signed in, it boots the sync engine.
 import { createContext, useContext, useEffect, useRef, useState } from 'react'
-import { cloudEnabled } from '../lib/firebase'
+import { cloudEnabled } from '../lib/supabase'
 import { watchAuth, describeUser, isReturningFromEmailLink, completeEmailSignIn } from '../lib/auth'
 import { startSync } from '../lib/sync'
 
@@ -37,7 +37,7 @@ export function AuthProvider({ children }) {
       if (u) {
         setStatus('syncing')
         try {
-          stopSyncRef.current = await startSync(u.uid, () => setStatus('synced'))
+          stopSyncRef.current = await startSync(u.id, () => setStatus('synced'))
           setStatus('synced')
         } catch (e) {
           console.warn('[auth] sync start failed', e)

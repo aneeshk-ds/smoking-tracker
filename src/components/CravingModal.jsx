@@ -35,7 +35,7 @@ function TimerMode({ onClose }) {
 
   return (
     <div className="flex flex-col items-center gap-6 py-4">
-      <p className="text-xs font-mono text-center" style={{ color: 'var(--muted)' }}>
+      <p className="text-xs font-sans text-center" style={{ color: 'var(--muted)' }}>
         delay for 10 minutes — most cravings pass before the timer ends
       </p>
 
@@ -49,19 +49,19 @@ function TimerMode({ onClose }) {
       {!done ? (
         <button
           onClick={() => setRunning((v) => !v)}
-          className="w-full py-3.5 rounded-2xl font-mono text-sm"
+          className="w-full py-3.5 rounded-2xl font-sans text-sm"
           style={{ background: running ? 'var(--surface-2)' : 'var(--accent)', color: running ? 'var(--muted)' : 'var(--bg)', border: '1px solid var(--border)' }}
         >
           {running ? 'pause' : 'start timer'}
         </button>
       ) : (
         <div className="w-full flex flex-col gap-2">
-          <p className="text-sm font-mono text-center" style={{ color: 'var(--accent)' }}>
+          <p className="text-sm font-sans text-center" style={{ color: 'var(--accent)' }}>
             craving passed — you held it
           </p>
           <button
             onClick={onClose}
-            className="w-full py-3.5 rounded-2xl font-mono text-sm"
+            className="w-full py-3.5 rounded-2xl font-sans text-sm"
             style={{ background: 'var(--accent)', color: 'var(--bg)' }}
           >
             close
@@ -100,7 +100,7 @@ function BreatheMode() {
 
   return (
     <div className="flex flex-col items-center gap-6 py-4">
-      <p className="text-xs font-mono text-center" style={{ color: 'var(--muted)' }}>
+      <p className="text-xs font-sans text-center" style={{ color: 'var(--muted)' }}>
         4-4-4 breathing — two rounds is enough to soften a craving
       </p>
 
@@ -120,7 +120,7 @@ function BreatheMode() {
           <span className="font-display text-2xl" style={{ color: 'var(--text)' }}>
             {active ? phase.duration - tick : '·'}
           </span>
-          <span className="text-[10px] font-mono mt-0.5" style={{ color: 'var(--muted)' }}>
+          <span className="text-[10px] font-sans mt-0.5" style={{ color: 'var(--muted)' }}>
             {active ? phase.label.toLowerCase() : 'ready'}
           </span>
         </div>
@@ -128,7 +128,7 @@ function BreatheMode() {
 
       <button
         onClick={() => { setActive((v) => !v); setPhaseIdx(0); setTick(0) }}
-        className="w-full py-3.5 rounded-2xl font-mono text-sm"
+        className="w-full py-3.5 rounded-2xl font-sans text-sm"
         style={{ background: active ? 'var(--surface-2)' : 'var(--accent)', color: active ? 'var(--muted)' : 'var(--bg)', border: '1px solid var(--border)' }}
       >
         {active ? 'stop' : 'start breathing'}
@@ -154,7 +154,7 @@ export default function CravingModal({ onClose }) {
         <div className="w-10 h-1 rounded-full mx-auto mb-4" style={{ background: 'var(--border)' }} />
 
         <h2 className="font-display text-xl mb-1" style={{ color: 'var(--text)' }}>Craving right now?</h2>
-        <p className="text-xs font-mono mb-5" style={{ color: 'var(--dim)' }}>
+        <p className="text-xs font-sans mb-5" style={{ color: 'var(--dim)' }}>
           this will pass — pick a tool to hold it off
         </p>
 
@@ -164,7 +164,7 @@ export default function CravingModal({ onClose }) {
             <button
               key={key}
               onClick={() => setTab(key)}
-              className="flex-1 py-2.5 text-xs font-mono transition-colors"
+              className="flex-1 py-2.5 text-xs font-sans transition-colors"
               style={{
                 background: tab === key ? 'var(--accent)' : 'var(--surface-2)',
                 color: tab === key ? 'var(--bg)' : 'var(--muted)',
@@ -180,11 +180,11 @@ export default function CravingModal({ onClose }) {
 
         {/* Tips */}
         <div className="mt-6 border-t pt-4" style={{ borderColor: 'var(--border)' }}>
-          <p className="text-[10px] font-mono mb-2 uppercase tracking-widest" style={{ color: 'var(--dim)' }}>quick tips</p>
+          <p className="text-[10px] font-sans mb-2 uppercase tracking-widest" style={{ color: 'var(--dim)' }}>quick tips</p>
           {TIPS.map((tip) => (
             <div key={tip} className="flex items-start gap-2 mb-1.5">
               <div className="w-1 h-1 rounded-full mt-1.5 flex-shrink-0" style={{ background: 'var(--dim)' }} />
-              <p className="text-[11px] font-mono" style={{ color: 'var(--dim)' }}>{tip}</p>
+              <p className="text-[11px] font-sans" style={{ color: 'var(--dim)' }}>{tip}</p>
             </div>
           ))}
         </div>
