@@ -4,6 +4,7 @@ import { createContext, useContext, useEffect, useRef, useState } from 'react'
 import { cloudEnabled } from '../lib/supabase'
 import { watchAuth, describeUser, isReturningFromEmailLink, completeEmailSignIn } from '../lib/auth'
 import { startSync } from '../lib/sync'
+import { logError } from '../lib/logger'
 
 const AuthContext = createContext({
   cloud: false,
@@ -40,7 +41,7 @@ export function AuthProvider({ children }) {
           stopSyncRef.current = await startSync(u.id, () => setStatus('synced'))
           setStatus('synced')
         } catch (e) {
-          console.warn('[auth] sync start failed', e)
+          logError('auth.sync-start', e)
           setStatus('error')
         }
       } else {

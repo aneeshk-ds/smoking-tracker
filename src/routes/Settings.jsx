@@ -611,6 +611,13 @@ export default function Settings() {
             </button>
           </div>
 
+          <button
+            onClick={handleExportJSON}
+            className="w-full py-2 rounded-xl text-xs font-sans border border-border bg-surface-2 text-muted mb-2"
+          >
+            Download my data
+          </button>
+
           {/* Backup is automatic via your account — no files to manage */}
           <div className="pt-3 mt-1" style={{ borderTop: '1px solid var(--border)' }}>
             {auth.user ? (

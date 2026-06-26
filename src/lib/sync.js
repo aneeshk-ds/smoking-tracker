@@ -8,6 +8,7 @@
 // the first time has no remote rows, so reconcile() pushes everything up — that
 // is the guest -> account migration. The local Dexie helpers are reused as-is.
 import { getSupabase } from './supabase'
+import { logError } from './logger'
 import {
   getSyncSnapshot, applyRemoteCigarettes, applyRemoteDeletes, applyRemoteSettings,
   clearTombstones, onLocalChange,
@@ -143,7 +144,7 @@ export function subscribeRemote(uid, onApplied) {
           ? applyRemoteDeletes([row.id])
           : applyRemoteCigarettes([remoteToRecord(row)])
         apply.then(() => onApplied && onApplied())
-          .catch((e) => console.warn('[sync] remote cig apply failed', e))
+          .catch((e) => logError('sync.remote-cig', e))
       })
     .on('postgres_changes',
       { event: '*', schema: 'public', table: 'settings', filter: `user_id=eq.${uid}` },
@@ -152,7 +153,7 @@ export function subscribeRemote(uid, onApplied) {
         if (!row) return
         applyRemoteSettings({ ...(row.data || {}), updatedAt: row.updated_at })
           .then(() => onApplied && onApplied())
-          .catch((e) => console.warn('[sync] remote settings apply failed', e))
+          .catch((e) => logError('sync.remote-settings', e))
       })
     .subscribe()
 
@@ -170,7 +171,7 @@ export function startLocalPush(uid, onPushed) {
     timer = setTimeout(() => {
       reconcile(uid)
         .then(() => onPushed && onPushed())
-        .catch((e) => console.warn('[sync] push failed', e))
+        .catch((e) => logError('sync.push', e))
     }, 1500)
   })
   return () => { stop(); clearTimeout(timer) }
