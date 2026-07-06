@@ -14,7 +14,11 @@ export function authAvailable() {
 
 // Where OAuth / magic-link redirects land back. Keeps the app's base path.
 function redirectTo() {
-  return window.location.origin + window.location.pathname
+  // Always return the app root under its correct base path (e.g. /smoking-tracker/),
+  // which is what's registered in Supabase's redirect allow-list. Using
+  // location.pathname breaks on GitHub Pages where the base path gets rewritten.
+  const base = import.meta.env.BASE_URL || '/'
+  return window.location.origin + (base.endsWith('/') ? base : base + '/')
 }
 
 // Subscribe to auth state. Calls cb(user|null). Returns an unsubscribe fn.
