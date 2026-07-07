@@ -39,6 +39,7 @@ jobs:
         env:
           # Sets the asset base path to /repo-name/ for GitHub Pages
           VITE_BASE: /${{ github.event.repository.name }}/
+          VITE_BUILD_ID: ${{ github.sha }}
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
 

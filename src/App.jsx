@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import UpdateToast from './components/UpdateToast'
 
 // Keep app routes under the deploy base (e.g. /smoking-tracker) so deep links
 // and refreshes resolve instead of bouncing to root.
@@ -61,6 +62,7 @@ export default function App() {
         <Route path="*"         element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
+    <UpdateToast />
     </AuthProvider>
   )
 }
