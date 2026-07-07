@@ -67,8 +67,9 @@ export default function BreathingOrb({ count, status = 'neutral', goal = 'awaren
       {/* Status label */}
       <div className="mt-3 text-xs font-medium tracking-wide" style={{ color: ringColor }}>
         {status === 'good' && goal === 'quit'    && 'smoke-free today'}
-        {status === 'good' && goal === 'reduce'  && 'on target today'}
-        {status === 'warning'                    && 'over target today'}
+        {status === 'good' && goal === 'reduce'  && `on track today${dailyTarget ? ` (within ${dailyTarget}/day)` : ''}`}
+        {status === 'warning' && goal === 'quit'   && 'smoked today'}
+        {status === 'warning' && goal === 'reduce' && `over your limit today${dailyTarget ? ` (>${dailyTarget})` : ''}`}
         {status === 'neutral'                    && 'today'}
       </div>
     </div>

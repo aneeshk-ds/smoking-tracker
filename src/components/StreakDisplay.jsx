@@ -46,7 +46,7 @@ export default function StreakDisplay({ streak, smokingStreak, shieldAvailable =
             </div>
             <div className="text-[10px] font-normal mt-0.5 leading-snug" style={{ color: 'var(--dim)' }}>
               {hasGoalStreak
-                ? (streak.mode === 'quitting' ? 'smoke-free' : 'on target')
+                ? (streak.mode === 'quitting' ? 'smoke-free' : 'within limit')
                 : 'smoke-free days'}
             </div>
             <div className="text-[10px] font-normal mt-1" style={{ color: 'var(--dim)' }}>

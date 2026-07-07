@@ -148,7 +148,7 @@ export default function Home() {
       const previousRun = goal === 'reduce'
         ? (streak?.currentRun ?? 0)
         : (streak?.daysSinceLast ?? 0)
-      setLapseInfo({ previousRun, goal, quitReason: settings?.quitReason ?? null })
+      setLapseInfo({ previousRun, goal, settings })
       setShowLapse(true)
     }
   }, [])
@@ -175,7 +175,6 @@ export default function Home() {
   const { count, spend, streak, smokingStreak, projected, settings, smokeFreeRate } = data
   const goal        = settings?.goal ?? 'awareness'
   const dailyTarget = settings?.dailyTarget ?? null
-  const quitReason  = settings?.quitReason ?? null
   const currency    = settings?.currency ?? 'INR'
   const orbStatus   = computeOrbStatus(count, goal, dailyTarget)
   const dateLabel   = format(new Date(), 'EEE, d MMM')
@@ -220,7 +219,7 @@ export default function Home() {
         <StreakDisplay streak={streak} smokingStreak={smokingStreak} />
 
         {/* Why you're quitting */}
-        <ReasonCard quitReason={quitReason} />
+        <ReasonCard settings={settings} />
 
         {/* Quick log */}
         <QuickLogButton
@@ -247,7 +246,7 @@ export default function Home() {
           <StatPill label="today" value={formatCurrency(spend, currency)} />
           {smokeFreeRate && (
             <StatPill
-              label="30d target"
+              label={goal === 'quit' ? 'smoke-free 30d' : 'on target 30d'}
               value={`${smokeFreeRate.rate}%`}
               valueColor={smokeFreeRate.rate >= 70 ? 'var(--success)' : 'var(--muted)'}
             />
@@ -272,7 +271,7 @@ export default function Home() {
         <LapseRecoveryModal
           previousRun={lapseInfo.previousRun}
           goal={lapseInfo.goal}
-          quitReason={lapseInfo.quitReason}
+          settings={lapseInfo.settings}
           onClose={() => setShowLapse(false)}
         />
       )}

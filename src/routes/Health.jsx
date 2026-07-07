@@ -1,3 +1,4 @@
+import { useNavigate } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import { getLastCigaretteTime, getSettings } from '../lib/storage'
 import {
@@ -9,6 +10,7 @@ import {
 import BottomNav from '../components/BottomNav'
 
 export default function Health() {
+  const navigate = useNavigate()
   const [lastTs, setLastTs] = useState(undefined) // undefined = loading, null = none
   const [elapsed, setElapsed] = useState(0) // ms
   const [currency, setCurrency] = useState('INR')
@@ -39,7 +41,10 @@ export default function Health() {
   return (
     <div className="min-h-screen bg-bg pb-24">
       {/* Sticky header */}
-      <div className="sticky top-0 z-10 bg-bg px-6 pt-8 pb-3">
+      <div className="sticky top-0 z-10 bg-bg px-6 pt-8 pb-3 flex items-center gap-3">
+        <button onClick={() => navigate(-1)} aria-label="Back" className="text-muted hover:text-text transition-colors">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5M12 5l-7 7 7 7" /></svg>
+        </button>
         <h1 className="font-display text-2xl text-text">Health</h1>
       </div>
 

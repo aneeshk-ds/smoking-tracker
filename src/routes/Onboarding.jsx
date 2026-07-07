@@ -33,7 +33,11 @@ export default function Onboarding({ onComplete }) {
   const [perPack, setPerPack] = useState(20)
   const [singlePrice, setSinglePrice] = useState('')
   const [purchaseType, setPurchaseType] = useState('pack')
-  const [quitReason, setQuitReason] = useState(null)
+  const [quitReasons, setQuitReasons] = useState([])
+  const [quitReasonCustom, setQuitReasonCustom] = useState('')
+  function toggleReason(k) {
+    setQuitReasons((prev) => prev.includes(k) ? prev.filter((x) => x !== k) : [...prev, k])
+  }
   const [saving, setSaving] = useState(false)
 
   const isINR = currency === 'INR'
@@ -76,7 +80,8 @@ export default function Onboarding({ onComplete }) {
       lastBackupAt: null,
       onboardedAt: Date.now(),
       baselineDailyAvg: null,
-      quitReason: quitReason ?? null,
+      quitReasons,
+      quitReasonCustom: quitReasonCustom.trim(),
     })
     onComplete()
   }
@@ -294,33 +299,46 @@ export default function Onboarding({ onComplete }) {
     </div>,
 
     // Step 4: Why are you quitting?
-    <div key="why" className="flex flex-col gap-6">
+    <div key="why" className="flex flex-col gap-5">
       <div>
         <h2 className="font-display text-2xl text-text">Why do you want to quit?</h2>
-        <p className="text-muted text-xs font-sans mt-2">Your reason will appear in your progress messages. Skip if you prefer.</p>
+        <p className="text-muted text-xs font-sans mt-2">Pick any that matter — choose more than one if you like. You can change these anytime.</p>
       </div>
       <div className="grid grid-cols-2 gap-2">
-        {WHY_OPTIONS.map((w) => (
-          <button
-            key={w.key}
-            type="button"
-            onClick={() => setQuitReason(quitReason === w.key ? null : w.key)}
-            className="text-left px-4 py-3 rounded-2xl border transition-all duration-150"
-            style={{
-              borderColor: quitReason === w.key ? 'var(--accent)' : 'var(--border)',
-              background: quitReason === w.key ? 'var(--accent-dim)' : 'var(--surface-2)',
-              color: quitReason === w.key ? 'var(--accent)' : 'var(--muted)',
-            }}
-          >
-            <span className="font-sans text-sm">{w.label}</span>
-          </button>
-        ))}
+        {WHY_OPTIONS.map((w) => {
+          const on = quitReasons.includes(w.key)
+          return (
+            <button
+              key={w.key}
+              type="button"
+              onClick={() => toggleReason(w.key)}
+              className="text-left px-4 py-3 rounded-2xl border transition-all duration-150"
+              style={{
+                borderColor: on ? 'var(--accent)' : 'var(--border)',
+                background: on ? 'var(--accent-dim)' : 'var(--surface-2)',
+                color: on ? 'var(--accent)' : 'var(--muted)',
+              }}
+            >
+              <span className="font-sans text-sm">{on ? '\u2713 ' : ''}{w.label}</span>
+            </button>
+          )
+        })}
+      </div>
+      <div>
+        <label className="text-muted text-xs font-sans block mb-2">Or add your own reason</label>
+        <input
+          value={quitReasonCustom}
+          onChange={(e) => setQuitReasonCustom(e.target.value)}
+          maxLength={60}
+          placeholder="e.g. to run a 5K"
+          className="w-full bg-surface-2 border border-border rounded-xl px-4 py-3 text-text text-sm font-sans focus:border-accent focus:outline-none"
+        />
       </div>
       <button
         onClick={() => setStep(5)}
         className="w-full py-4 bg-accent text-bg rounded-2xl font-sans font-medium text-base"
       >
-        {quitReason ? 'Continue' : 'Skip'}
+        {quitReasons.length || quitReasonCustom.trim() ? 'Continue' : 'Skip'}
       </button>
     </div>,
 

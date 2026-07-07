@@ -21,6 +21,7 @@ import { openPrintReport } from '../lib/print-report'
 import { getThemePref, setThemePref } from '../lib/theme'
 import { signOut } from '../lib/auth'
 import { generateShareCard } from '../lib/share-card'
+import { reasonLabels, getReasons } from '../lib/reasons'
 import {
   setBackupReminder,
   isBackupReminderEnabled,
@@ -144,9 +145,8 @@ export default function Settings() {
     setTimeout(() => setGoalSaved(false), 1500)
   }
 
-  async function confirmGoalWithReason(reason) {
-    const patch = { goal: 'quit' }
-    if (reason) patch.quitReason = reason
+  async function confirmGoalWithReason({ reasons, custom }) {
+    const patch = { goal: 'quit', quitReasons: reasons || [], quitReasonCustom: (custom || '').trim() }
     await updateSettings(patch)
     setSettings((prev) => ({ ...prev, ...patch }))
     setShowQuitReasonModal(false)
@@ -155,10 +155,10 @@ export default function Settings() {
     setTimeout(() => setGoalSaved(false), 1500)
   }
 
-  async function changeQuitReason(reason) {
-    if (!reason) return
-    await updateSettings({ quitReason: reason })
-    setSettings((prev) => ({ ...prev, quitReason: reason }))
+  async function changeQuitReason({ reasons, custom }) {
+    const patch = { quitReasons: reasons || [], quitReasonCustom: (custom || '').trim() }
+    await updateSettings(patch)
+    setSettings((prev) => ({ ...prev, ...patch }))
     setShowQuitReasonModal(false)
   }
 
@@ -452,8 +452,8 @@ export default function Settings() {
               style={{ background: 'var(--surface-2)', border: '1px solid var(--border)' }}
             >
               <span className="text-[10px] font-sans" style={{ color: 'var(--dim)' }}>
-                {settings.quitReason
-                  ? `Reason: ${WHY_OPTIONS.find(o => o.key === settings.quitReason)?.label ?? settings.quitReason}`
+                {reasonLabels(settings).length
+                  ? `Reasons: ${reasonLabels(settings).join(', ')}`
                   : 'No reason set'}
               </span>
               <button
@@ -701,7 +701,8 @@ export default function Settings() {
       {/* Quit reason modal */}
       {showQuitReasonModal && (
         <GoalQuitModal
-          currentReason={pendingQuitReason}
+          currentReasons={getReasons(settings).keys}
+          currentCustom={getReasons(settings).custom}
           isChangingReason={settings.goal === 'quit'}
           onConfirm={settings.goal === 'quit' ? changeQuitReason : confirmGoalWithReason}
           onCancel={() => setShowQuitReasonModal(false)}
@@ -800,36 +801,48 @@ function Toggle({ value, onChange }) {
   )
 }
 
-function GoalQuitModal({ currentReason, isChangingReason, onConfirm, onCancel }) {
-  const [selected, setSelected] = useState(currentReason ?? null)
+function GoalQuitModal({ currentReasons, currentCustom, isChangingReason, onConfirm, onCancel }) {
+  const [selected, setSelected] = useState(currentReasons || [])
+  const [custom, setCustom] = useState(currentCustom || '')
+  const toggle = (k) => setSelected((prev) => prev.includes(k) ? prev.filter((x) => x !== k) : [...prev, k])
+  const any = selected.length > 0 || custom.trim().length > 0
 
   return (
     <Modal>
       <p className="text-text text-sm font-sans font-medium mb-1">
-        {isChangingReason ? 'Change your reason' : 'Why are you quitting?'}
+        {isChangingReason ? 'Change your reasons' : 'Why are you quitting?'}
       </p>
       <p className="text-muted text-[10px] font-sans mb-4 leading-relaxed">
-        {isChangingReason
-          ? 'Update what keeps you going on hard days.'
-          : 'A clear reason helps on hard days. You can change it anytime.'}
+        Pick any that matter \u2014 choose more than one if you like. You can change these anytime.
       </p>
 
-      <div className="grid grid-cols-2 gap-2 mb-4">
-        {WHY_OPTIONS.map((opt) => (
-          <button
-            key={opt.key}
-            onClick={() => setSelected(opt.key)}
-            className="py-2 px-3 rounded-xl text-xs font-sans border transition-all duration-150"
-            style={{
-              background: selected === opt.key ? 'rgba(167,139,250,0.14)' : 'var(--surface-2)',
-              color: selected === opt.key ? 'var(--accent)' : 'var(--muted)',
-              borderColor: selected === opt.key ? 'var(--accent)' : 'var(--border)',
-            }}
-          >
-            {opt.label}
-          </button>
-        ))}
+      <div className="grid grid-cols-2 gap-2 mb-3">
+        {WHY_OPTIONS.map((opt) => {
+          const on = selected.includes(opt.key)
+          return (
+            <button
+              key={opt.key}
+              onClick={() => toggle(opt.key)}
+              className="py-2 px-3 rounded-xl text-xs font-sans border transition-all duration-150"
+              style={{
+                background: on ? 'rgba(167,139,250,0.14)' : 'var(--surface-2)',
+                color: on ? 'var(--accent)' : 'var(--muted)',
+                borderColor: on ? 'var(--accent)' : 'var(--border)',
+              }}
+            >
+              {on ? '\u2713 ' : ''}{opt.label}
+            </button>
+          )
+        })}
       </div>
+
+      <input
+        value={custom}
+        onChange={(e) => setCustom(e.target.value)}
+        maxLength={60}
+        placeholder="Or add your own reason"
+        className="w-full bg-surface-2 border border-border rounded-xl px-3 py-2 text-text text-xs font-sans focus:border-accent focus:outline-none mb-4"
+      />
 
       <div className="flex gap-2">
         <button
@@ -839,16 +852,16 @@ function GoalQuitModal({ currentReason, isChangingReason, onConfirm, onCancel })
           Cancel
         </button>
         <button
-          onClick={() => onConfirm(selected)}
-          disabled={!selected}
+          onClick={() => onConfirm({ reasons: selected, custom })}
+          disabled={!isChangingReason && !any}
           className="flex-1 py-2 rounded-xl text-xs font-sans transition-all"
           style={{
-            background: selected ? 'var(--accent)' : 'var(--surface-2)',
-            color: selected ? 'var(--bg)' : 'var(--dim)',
-            opacity: selected ? 1 : 0.6,
+            background: (isChangingReason || any) ? 'var(--accent)' : 'var(--surface-2)',
+            color: (isChangingReason || any) ? 'var(--bg)' : 'var(--dim)',
+            opacity: (isChangingReason || any) ? 1 : 0.6,
           }}
         >
-          {isChangingReason ? 'Update reason' : 'Set goal to Quit'}
+          {isChangingReason ? 'Save reasons' : 'Set goal to Quit'}
         </button>
       </div>
     </Modal>

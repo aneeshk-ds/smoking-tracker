@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { TRIGGERS } from '../lib/constants'
 import { updateCigarette, getTodayEntries } from '../lib/storage'
+import { reasonPhrases } from '../lib/reasons'
 
 const PROTECTIVE_ACTIONS = [
   'move away from where you smoked',
@@ -10,15 +11,12 @@ const PROTECTIVE_ACTIONS = [
   'set a timer — wait 10 minutes before the next one',
 ]
 
-export default function LapseRecoveryModal({ previousRun, goal, quitReason, onClose }) {
+export default function LapseRecoveryModal({ previousRun, goal, settings, onClose }) {
   const [trigger, setTrigger] = useState('')
   const [saved, setSaved] = useState(false)
 
-  const reasonPhrase = quitReason
-    ? { family: 'for your family', health: 'for your health', partner: 'for your partner',
-        child: 'for your child', money: 'to save money', fitness: 'for your fitness',
-        control: 'to feel in control', doctor: 'on doctor\'s advice' }[quitReason] ?? null
-    : null
+  const _phrases = reasonPhrases(settings)
+  const reasonPhrase = _phrases.length ? _phrases.join(' and ') : null
 
   async function handleSave() {
     if (trigger) {
