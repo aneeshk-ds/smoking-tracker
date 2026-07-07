@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react'
+import InfoTip from '../components/InfoTip'
+import { HELP } from '../lib/help'
 import {
   getAllCigarettes,
   getAllDayStats,
@@ -24,10 +26,10 @@ import BottomNav from '../components/BottomNav'
 
 // ── Section header ────────────────────────────────────────────────────────────
 
-function SectionHeader({ title, subtitle }) {
+function SectionHeader({ title, subtitle, help }) {
   return (
     <div className="mb-3">
-      <h2 className="text-lg font-bold" style={{ color: 'var(--text)' }}>{title}</h2>
+      <h2 className="flex items-center gap-1.5 text-lg font-bold" style={{ color: 'var(--text)' }}>{title}{help && <InfoTip text={help.text} label={help.label} size={14} />}</h2>
       {subtitle && (
         <p className="text-xs font-normal mt-0.5" style={{ color: 'var(--muted)' }}>{subtitle}</p>
       )}
@@ -182,11 +184,11 @@ function CalendarGrid({ grid }) {
       {/* Legend */}
       <div className="flex items-center gap-4 mt-3">
         {[
-          { color: '#4ADE80', label: 'On target' },
-          { color: '#F87171', label: 'Over target' },
-          { color: 'var(--surface-2)', label: 'No data', border: true },
-        ].map(({ color, label, border }) => (
-          <div key={label} className="flex items-center gap-1.5">
+          { color: '#4ADE80', label: 'On target', help: HELP.legendOnTarget },
+          { color: '#F87171', label: 'Over target', help: HELP.legendOverTarget },
+          { color: 'var(--surface-2)', label: 'No data', border: true, help: HELP.legendNoData },
+        ].map(({ color, label, border, help }) => (
+          <div key={label} className="flex items-center gap-1">
             <div
               className="w-3 h-3 rounded-sm"
               style={{
@@ -195,6 +197,7 @@ function CalendarGrid({ grid }) {
               }}
             />
             <span className="text-[10px] font-normal" style={{ color: 'var(--dim)' }}>{label}</span>
+            <InfoTip text={help.text} label={help.label} size={12} />
           </div>
         ))}
       </div>
@@ -338,7 +341,7 @@ export default function Journey() {
 
         {/* Calendar */}
         <section>
-          <SectionHeader title="12-Week Record" />
+          <SectionHeader title="12-Week Record" help={HELP.calendar} />
           <div
             className="p-4 rounded-2xl"
             style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}

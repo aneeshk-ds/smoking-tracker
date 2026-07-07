@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react'
+import InfoTip from '../components/InfoTip'
+import { HELP } from '../lib/help'
 import {
   getHeatmapData,
   getWeekdayWeekendBreakdown,
@@ -113,23 +115,23 @@ export default function Insights() {
 
           {/* ── Summary strip ── */}
           <div className="grid grid-cols-4 gap-2">
-            <SummaryCell label="Total" value={data.totalSmoked} unit="cigs" />
-            <SummaryCell label="Avg/day" value={data.avgPerDay} unit="" />
-            <SummaryCell label="Spent" value={formatCurrency(data.totalSpent, data.currency)} unit="" small />
+            <SummaryCell label="Total" value={data.totalSmoked} unit="cigs" help={HELP.insTotal} />
+            <SummaryCell label="Avg/day" value={data.avgPerDay} unit="" help={HELP.insAvg} />
+            <SummaryCell label="Spent" value={formatCurrency(data.totalSpent, data.currency)} unit="" small help={HELP.insSpent} />
             {data.moneySaved > 0 ? (
-              <SummaryCell label="Saved" value={formatCurrency(data.moneySaved, data.currency)} unit="" accent small />
+              <SummaryCell label="Saved" value={formatCurrency(data.moneySaved, data.currency)} unit="" accent small help={HELP.insSaved} />
             ) : (
-              <SummaryCell label="Peak" value={formatHour(data.peakHour)} unit="" small />
+              <SummaryCell label="Peak" value={formatHour(data.peakHour)} unit="" small help={HELP.insPeak} />
             )}
           </div>
 
           {/* ── Weekday vs Weekend ── */}
-          <Card title="Weekday vs Weekend">
+          <Card title="Weekday vs Weekend" help={HELP.insWeekSplit}>
             <WeekdayWeekendSplit data={data.weekSplit} />
           </Card>
 
           {/* ── Heatmap ── */}
-          <Card title="When you smoke" subtitle={`Last ${range} days`}>
+          <Card title="When you smoke" subtitle={`Last ${range} days`} help={HELP.insWhen}>
             <Heatmap grid={data.heatmap} />
           </Card>
 
@@ -138,29 +140,30 @@ export default function Insights() {
             title="Daily count"
             subtitle={data.dailyTarget ? `Target: ${data.dailyTarget}/day` : null}
             dangerSubtitle={!!data.dailyTarget}
+            help={HELP.insDaily}
           >
             <TrendChart data={data.trend} dailyTarget={data.dailyTarget} />
           </Card>
 
           {/* ── Triggers + Locations side by side ── */}
           <div className="grid grid-cols-2 gap-3">
-            <Card title="Triggers" compact>
+            <Card title="Triggers" compact help={HELP.insTriggers}>
               <BarBreakdown items={data.triggers} />
             </Card>
-            <Card title="Locations" compact>
+            <Card title="Locations" compact help={HELP.insLocations}>
               <BarBreakdown items={data.locations} color="var(--muted)" />
             </Card>
           </div>
 
           {/* ── Craving intensity trend ── */}
           {data.cravingTrend && (
-            <Card title="Craving intensity" subtitle="avg per day — lower is better">
+            <Card title="Craving intensity" subtitle="avg per day — lower is better" help={HELP.insCraving}>
               <CravingTrendChart data={data.cravingTrend} />
             </Card>
           )}
 
           {/* ── Cost projection ── */}
-          <Card title="If nothing changes" subtitle="Projected spend">
+          <Card title="If nothing changes" subtitle="Projected spend" help={HELP.insProjection}>
             <ProjectionCard dailyCost={data.dailyCost} currency={data.currency} />
           </Card>
 
@@ -174,11 +177,11 @@ export default function Insights() {
 
 // ── Sub-components ──
 
-function Card({ title, subtitle, dangerSubtitle, compact, children }) {
+function Card({ title, subtitle, dangerSubtitle, compact, children, help }) {
   return (
     <div className="rounded-2xl border border-border bg-surface p-4">
       <div className="flex items-baseline justify-between mb-3">
-        <span className="text-text text-xs font-sans font-medium tracking-wide uppercase">{title}</span>
+        <span className="flex items-center gap-1 text-text text-xs font-sans font-medium tracking-wide uppercase">{title}{help && <InfoTip text={help.text} label={help.label} size={13} />}</span>
         {subtitle && (
           <span
             className="text-[10px] font-sans"
@@ -193,10 +196,10 @@ function Card({ title, subtitle, dangerSubtitle, compact, children }) {
   )
 }
 
-function SummaryCell({ label, value, unit, accent, small }) {
+function SummaryCell({ label, value, unit, accent, small, help }) {
   return (
     <div className="rounded-xl bg-surface border border-border p-2.5 text-center">
-      <div className="text-dim text-[9px] font-sans mb-1">{label}</div>
+      <div className="flex items-center justify-center gap-1 text-dim text-[9px] font-sans mb-1">{label}{help && <InfoTip text={help.text} label={help.label} size={11} />}</div>
       <div
         className={`font-display leading-tight ${small ? 'text-sm' : 'text-xl'}`}
         style={{ color: accent ? 'var(--accent)' : 'var(--text)' }}

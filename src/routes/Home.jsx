@@ -23,6 +23,10 @@ import LapseRecoveryModal from '../components/LapseRecoveryModal'
 import CravingModal from '../components/CravingModal'
 import TodayLog from '../components/TodayLog'
 import ReasonCard from '../components/ReasonCard'
+import InfoTip from '../components/InfoTip'
+import { HELP } from '../lib/help'
+import Tour from '../components/Tour'
+import { shouldShowTour } from '../lib/tour'
 
 const GOAL_LABEL = { awareness: 'AWARE', reduce: 'REDUCE', quit: 'QUIT' }
 
@@ -88,7 +92,7 @@ function QuickLogButton({ onLogged, onLongPress, saving }) {
   )
 }
 
-function StatPill({ label, value, valueColor }) {
+function StatPill({ label, value, valueColor, help }) {
   return (
     <div
       className="flex flex-col items-center justify-center px-3 py-3 rounded-2xl flex-1"
@@ -100,8 +104,9 @@ function StatPill({ label, value, valueColor }) {
       >
         {value}
       </span>
-      <span className="text-xs font-normal mt-0.5 text-center" style={{ color: 'var(--muted)' }}>
+      <span className="flex items-center gap-1 text-xs font-normal mt-0.5 text-center" style={{ color: 'var(--muted)' }}>
         {label}
+        {help && <InfoTip text={help.text} label={help.label} size={12} />}
       </span>
     </div>
   )
@@ -115,6 +120,7 @@ export default function Home() {
   const [showLapse, setShowLapse]   = useState(false)
   const [lapseInfo, setLapseInfo]   = useState(null)
   const [showCraving, setShowCraving] = useState(false)
+  const [showTour, setShowTour] = useState(false)
 
   const load = useCallback(async () => {
     const [count, spend, streak, smokingStreak, projected, settings, smokeFreeRate] = await Promise.all([
@@ -130,6 +136,10 @@ export default function Home() {
   }, [])
 
   useEffect(() => { load() }, [load, refreshKey])
+
+  useEffect(() => {
+    if (data && shouldShowTour()) setShowTour(true)
+  }, [data])
 
   const handleLogged = useCallback(async () => {
     setSaving(false)
@@ -191,7 +201,7 @@ export default function Home() {
           <span className="text-sm font-normal" style={{ color: 'var(--muted)' }}>
             {dateLabel}
           </span>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5" data-tour="goal">
             <span
               className="text-xs font-bold tracking-widest px-2.5 py-1 rounded-lg"
               style={{
@@ -202,31 +212,35 @@ export default function Home() {
             >
               {GOAL_LABEL[goal] ?? 'TRACK'}
             </span>
+            <InfoTip text={HELP.goal.text} label={HELP.goal.label} size={14} />
           </div>
         </div>
 
         {/* Breathing orb */}
-        <div className="flex justify-center py-3">
+        <div className="relative flex justify-center py-3" data-tour="orb">
           <BreathingOrb
             count={count}
             status={orbStatus}
             goal={goal}
             dailyTarget={dailyTarget}
           />
+          <div className="absolute top-3 right-0">
+            <InfoTip text={HELP.orb.text} label={HELP.orb.label} size={15} />
+          </div>
         </div>
 
         {/* Streak */}
-        <StreakDisplay streak={streak} smokingStreak={smokingStreak} />
+        <div data-tour="streak"><StreakDisplay streak={streak} smokingStreak={smokingStreak} /></div>
 
         {/* Why you're quitting */}
-        <ReasonCard settings={settings} />
+        <div data-tour="reason"><ReasonCard settings={settings} /></div>
 
         {/* Quick log */}
-        <QuickLogButton
+        <div data-tour="log"><QuickLogButton
           onLogged={handleQuickLog}
           onLongPress={() => navigate('/log')}
           saving={saving}
-        />
+        /></div>
 
         {/* Craving */}
         <button
@@ -242,19 +256,21 @@ export default function Home() {
         </button>
 
         {/* Stat pills */}
-        <div className="flex gap-2.5">
-          <StatPill label="today" value={formatCurrency(spend, currency)} />
+        <div className="flex gap-2.5" data-tour="pills">
+          <StatPill label="today" value={formatCurrency(spend, currency)} help={HELP.spendToday} />
           {smokeFreeRate && (
             <StatPill
               label={goal === 'quit' ? 'smoke-free 30d' : 'on target 30d'}
               value={`${smokeFreeRate.rate}%`}
               valueColor={smokeFreeRate.rate >= 70 ? 'var(--success)' : 'var(--muted)'}
+              help={HELP.onTargetRate}
             />
           )}
           <StatPill
             label="10yr cost"
             value={formatCurrency(projected, currency)}
             valueColor="var(--danger)"
+            help={HELP.projectedCost}
           />
         </div>
 
@@ -279,6 +295,8 @@ export default function Home() {
       {showCraving && (
         <CravingModal onClose={() => setShowCraving(false)} />
       )}
+
+      {showTour && <Tour onClose={() => setShowTour(false)} />}
     </div>
   )
 }

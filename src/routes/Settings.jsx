@@ -22,6 +22,9 @@ import { getThemePref, setThemePref } from '../lib/theme'
 import { signOut } from '../lib/auth'
 import { generateShareCard } from '../lib/share-card'
 import { seedDemoData } from '../lib/demo-seed'
+import InfoTip from '../components/InfoTip'
+import { HELP } from '../lib/help'
+import { requestTourReplay } from '../lib/tour'
 import { reasonLabels, getReasons } from '../lib/reasons'
 import {
   setBackupReminder,
@@ -398,7 +401,7 @@ export default function Settings() {
       <div className="px-4 max-w-md mx-auto space-y-3 mt-1">
 
         {/* ── Account / Backup ── */}
-        <Section title="ACCOUNT">
+        <Section title="ACCOUNT" help={HELP.setBackup}>
           {auth.user ? (
             <div>
               <button onClick={() => navigate('/account')} className="w-full flex items-center gap-3 py-2 text-left">
@@ -444,7 +447,7 @@ export default function Settings() {
         </Section>
 
         {/* ── Appearance ── */}
-        <Section title="APPEARANCE">
+        <Section title="APPEARANCE" help={HELP.setAppearance}>
           <div className="flex gap-1 p-1 rounded-xl" style={{ background: 'var(--surface-2)' }}>
             {['system', 'light', 'dark'].map((opt) => (
               <button
@@ -460,7 +463,7 @@ export default function Settings() {
         </Section>
 
         {/* ── Goal ── */}
-        <Section title="GOAL">
+        <Section title="GOAL" help={HELP.setGoal}>
           <div className="flex gap-2 mb-2">
             {GOALS.map((g) => (
               <button
@@ -530,7 +533,7 @@ export default function Settings() {
         </Section>
 
         {/* ── Brand defaults ── */}
-        <Section title="DEFAULT BRAND">
+        <Section title="DEFAULT BRAND" help={HELP.setBrand}>
           <div className="flex flex-wrap gap-1.5 mb-3">
             {brands.map((b) => (
               <button
@@ -630,7 +633,7 @@ export default function Settings() {
         </Section>
 
         {/* ── Purchase type ── */}
-        <Section title="PURCHASE TYPE">
+        <Section title="PURCHASE TYPE" help={HELP.setPurchase}>
           <div className="flex gap-2">
             {['pack', 'single'].map((pt) => (
               <button
@@ -654,7 +657,7 @@ export default function Settings() {
         </Section>
 
         {/* ── Currency ── */}
-        <Section title="CURRENCY">
+        <Section title="CURRENCY" help={HELP.setCurrency}>
           <div className="flex gap-2">
             {CURRENCIES.map((c) => (
               <button
@@ -674,7 +677,7 @@ export default function Settings() {
         </Section>
 
         {/* ── Data ── */}
-        <Section title="DATA">
+        <Section title="DATA" help={HELP.setDemo}>
           {/* Report + Share row */}
           <div className="flex gap-2 mb-2">
             <button
@@ -728,6 +731,13 @@ export default function Settings() {
             className="w-full py-2 rounded-xl text-xs font-sans border border-dashed border-border bg-transparent text-dim mb-2 disabled:opacity-50"
           >
             {seeding ? 'Loading demo…' : 'Load 30 days of demo data'}
+          </button>
+
+          <button
+            onClick={() => { requestTourReplay(); navigate('/') }}
+            className="w-full py-2 rounded-xl text-xs font-sans border border-border bg-surface-2 text-muted mb-2"
+          >
+            Replay the app tour
           </button>
 
           {/* Backup is automatic via your account — no files to manage */}
@@ -853,10 +863,10 @@ export default function Settings() {
 
 // ── Sub-components ──
 
-function Section({ title, children }) {
+function Section({ title, children, help }) {
   return (
     <div className="rounded-2xl border border-border bg-surface p-4">
-      <div className="text-[10px] font-sans font-medium text-muted tracking-widest uppercase mb-3">{title}</div>
+      <div className="flex items-center gap-1 text-[10px] font-sans font-medium text-muted tracking-widest uppercase mb-3">{title}{help && <InfoTip text={help.text} label={help.label} size={12} />}</div>
       {children}
     </div>
   )

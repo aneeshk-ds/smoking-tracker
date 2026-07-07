@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
 import { getPatternInsights } from '../lib/insights'
+import InfoTip from './InfoTip'
+import { HELP } from '../lib/help'
 
 const TYPE_DOT = {
   trigger: { color: 'var(--danger)', label: 'T' },
@@ -55,8 +57,9 @@ export default function InsightCard({ refreshKey }) {
         style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}
       >
         <div className="flex items-center justify-between mb-2">
-          <span className="text-[10px] font-sans tracking-widest uppercase" style={{ color: 'var(--dim)' }}>
+          <span className="flex items-center gap-1 text-[10px] font-sans tracking-widest uppercase" style={{ color: 'var(--dim)' }}>
             your pattern
+            <InfoTip text={HELP.insight.text} label={HELP.insight.label} size={13} />
           </span>
           <span className="text-[10px] font-sans" style={{ color: 'var(--dim)' }}>
             {count}/{needed} entries
@@ -86,8 +89,9 @@ export default function InsightCard({ refreshKey }) {
       }}
     >
       <div className="flex items-center justify-between mb-1">
-        <span className="text-[10px] font-sans tracking-widest uppercase" style={{ color: 'var(--dim)' }}>
+        <span className="flex items-center gap-1 text-[10px] font-sans tracking-widest uppercase" style={{ color: 'var(--dim)' }}>
           your pattern
+          <InfoTip text={HELP.insight.text} label={HELP.insight.label} size={13} />
         </span>
         <span className="text-[10px] font-sans" style={{ color: 'var(--dim)' }}>
           {totalEntries} entries

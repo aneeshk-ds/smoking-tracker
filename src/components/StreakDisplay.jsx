@@ -5,6 +5,8 @@
  */
 
 import { Lung, BurningCigarette } from './StreakArt'
+import InfoTip from './InfoTip'
+import { HELP } from '../lib/help'
 
 export default function StreakDisplay({ streak, smokingStreak, shieldAvailable = false }) {
   const smokingRun    = smokingStreak?.currentRun ?? 0
@@ -44,10 +46,11 @@ export default function StreakDisplay({ streak, smokingStreak, shieldAvailable =
                 {cleanCount === 1 ? 'day' : 'days'}
               </span>
             </div>
-            <div className="text-[10px] font-normal mt-0.5 leading-snug" style={{ color: 'var(--dim)' }}>
+            <div className="flex items-center gap-1 text-[10px] font-normal mt-0.5 leading-snug" style={{ color: 'var(--dim)' }}>
               {hasGoalStreak
                 ? (streak.mode === 'quitting' ? 'smoke-free' : 'within limit')
                 : 'smoke-free days'}
+              <InfoTip text={HELP.streak.text} label={HELP.streak.label} size={12} />
             </div>
             <div className="text-[10px] font-normal mt-1" style={{ color: 'var(--dim)' }}>
               {isPersonalBest ? 'personal best' : `best: ${cleanBest}d`}
@@ -80,8 +83,9 @@ export default function StreakDisplay({ streak, smokingStreak, shieldAvailable =
                 {smokingRun === 1 ? 'day' : 'days'}
               </span>
             </div>
-            <div className="text-[10px] font-normal mt-0.5 leading-snug" style={{ color: 'var(--dim)' }}>
+            <div className="flex items-center gap-1 text-[10px] font-normal mt-0.5 leading-snug" style={{ color: 'var(--dim)' }}>
               smoking in a row
+              <InfoTip text={HELP.smokingRun.text} label={HELP.smokingRun.label} size={12} />
             </div>
             <div className="text-[10px] font-normal mt-1" style={{ color: 'var(--dim)' }}>
               {smokingRun === 0

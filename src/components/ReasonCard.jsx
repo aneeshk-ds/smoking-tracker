@@ -1,3 +1,5 @@
+import InfoTip from './InfoTip'
+import { HELP } from '../lib/help'
 // Shows the user's saved "why I'm quitting" reasons as a daily motivator.
 // Highlights each selected reason (presets + custom) so it stays front-of-mind.
 import { reasonLabels } from '../lib/reasons'
@@ -8,8 +10,9 @@ export default function ReasonCard({ settings }) {
 
   return (
     <div className="card px-5 py-4" style={{ borderColor: 'var(--accent)', background: 'var(--accent-dim)' }}>
-      <div className="text-[10px] font-sans font-medium tracking-widest uppercase mb-2.5" style={{ color: 'var(--accent)' }}>
+      <div className="flex items-center gap-1 text-[10px] font-sans font-medium tracking-widest uppercase mb-2.5" style={{ color: 'var(--accent)' }}>
         {labels.length > 1 ? "Why you're doing this" : 'Your reason'}
+        <InfoTip text={HELP.reason.text} label={HELP.reason.label} size={13} />
       </div>
       <div className="flex flex-wrap gap-2">
         {labels.map((l, i) => (

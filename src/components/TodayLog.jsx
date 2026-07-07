@@ -1,3 +1,5 @@
+import InfoTip from './InfoTip'
+import { HELP } from '../lib/help'
 import { useState, useEffect } from 'react'
 import { format } from 'date-fns'
 import { getTodayEntries, deleteCigarette, getSettings } from '../lib/storage'
@@ -32,8 +34,9 @@ export default function TodayLog({ refreshKey, onChanged }) {
           onClick={() => setOpen((v) => !v)}
           className="flex items-center justify-between w-full py-2"
         >
-          <span className="text-xs font-sans tracking-widest uppercase" style={{ color: 'var(--muted)' }}>
+          <span className="flex items-center gap-1 text-xs font-sans tracking-widest uppercase" style={{ color: 'var(--muted)' }}>
             Today's log ({entries.length})
+            <InfoTip text={HELP.todayLog.text} label={HELP.todayLog.label} size={13} />
           </span>
           <svg
             width="14" height="14" viewBox="0 0 24 24" fill="none"

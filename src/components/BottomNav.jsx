@@ -81,6 +81,7 @@ const NAV = [
 export default function BottomNav() {
   return (
     <nav
+      data-tour="nav"
       className="fixed bottom-0 left-0 right-0 z-50 flex safe-bottom"
       style={{
         background: 'rgba(13,20,32,0.94)',

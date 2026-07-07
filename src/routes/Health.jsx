@@ -8,6 +8,8 @@ import {
   timeUntilLabel,
 } from '../lib/health-milestones'
 import BottomNav from '../components/BottomNav'
+import InfoTip from '../components/InfoTip'
+import { HELP } from '../lib/help'
 
 export default function Health() {
   const navigate = useNavigate()
@@ -66,7 +68,7 @@ export default function Health() {
         {/* ── Reached milestones ── */}
         {reached.length > 0 && (
           <section>
-            <SectionHeader label="REACHED" count={reached.length} accent />
+            <SectionHeader label="REACHED" count={reached.length} accent help={HELP.healthReached} />
             <div className="space-y-2 mt-2">
               {[...reached].reverse().map((m) => (
                 <MilestoneCard key={m.id} milestone={m} reached />
@@ -78,7 +80,7 @@ export default function Health() {
         {/* ── Upcoming milestones ── */}
         {upcoming.length > 0 && (
           <section>
-            <SectionHeader label={lastTs ? 'UPCOMING' : 'RECOVERY TIMELINE'} />
+            <SectionHeader label={lastTs ? 'UPCOMING' : 'RECOVERY TIMELINE'} help={HELP.healthUpcoming} />
             <div className="space-y-2 mt-2">
               {visibleUpcoming.map((m) => (
                 <MilestoneCard
@@ -188,14 +190,15 @@ function TimeUnit({ value, unit, large }) {
   )
 }
 
-function SectionHeader({ label, count, accent }) {
+function SectionHeader({ label, count, accent, help }) {
   return (
     <div className="flex items-center gap-2 px-1">
       <span
-        className="text-[10px] font-sans font-medium tracking-widest uppercase"
+        className="flex items-center gap-1 text-[10px] font-sans font-medium tracking-widest uppercase"
         style={{ color: accent ? 'var(--accent)' : 'var(--dim)' }}
       >
         {label}
+        {help && <InfoTip text={help.text} label={help.label} size={12} />}
       </span>
       {count != null && (
         <span
