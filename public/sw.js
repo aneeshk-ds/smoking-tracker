@@ -1,6 +1,6 @@
 // Tracker Service Worker — minimal offline shell cache.
 // Base-aware: works whether served from "/" (local) or "/smoking-tracker/" (GH Pages).
-const CACHE = 'tracker-v3'
+const CACHE = 'tracker-v4'
 
 // The SW lives at <base>sw.js, so its directory IS the app base.
 const BASE = self.location.pathname.replace(/sw\.js$/, '') // e.g. "/smoking-tracker/"
@@ -40,9 +40,12 @@ self.addEventListener('fetch', (e) => {
     return
   }
 
-  // Navigation requests → network, fall back to cached shell offline
+  // Navigation requests → always fetch the freshest index.html when online
+  // (bypass the HTTP cache so new deploys load), fall back to cached shell offline.
   if (e.request.mode === 'navigate') {
-    e.respondWith(fetch(e.request).catch(() => caches.match(SHELL)))
+    e.respondWith(
+      fetch(e.request, { cache: 'no-store' }).catch(() => caches.match(SHELL))
+    )
     return
   }
 
