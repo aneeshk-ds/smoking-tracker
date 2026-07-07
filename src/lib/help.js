@@ -60,11 +60,23 @@ export const HELP = {
   },
   legendOnTarget: {
     label: 'On target',
-    text: 'A day you met your goal — smoke-free if you’re quitting, or within your daily limit if you’re reducing.',
+    text: 'A day you met your goal — at or under your daily target (or smoke-free if you’re quitting). Darker green = more cigarettes that day, but still on target.',
   },
   legendOverTarget: {
     label: 'Over target',
-    text: 'A day you went past your goal — you smoked while quitting, or logged more than your daily limit.',
+    text: 'A day you went past your target. The darker the red, the further over your limit you went.',
+  },
+  legendFewer: {
+    label: 'Fewer',
+    text: 'A lighter square means fewer cigarettes that day.',
+  },
+  legendMore: {
+    label: 'More',
+    text: 'A darker square means more cigarettes that day.',
+  },
+  dailyTarget: {
+    label: 'Daily target',
+    text: 'Your limit for a single day. Days at or under it count as on target; days over it count as over. Adjust it right here, or in Settings → Goal. If your goal is Quit, the target is zero.',
   },
   legendNoData: {
     label: 'No data',

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import InfoTip from '../components/InfoTip'
 import { HELP } from '../lib/help'
 import {
@@ -8,12 +9,14 @@ import {
   getLastCigaretteTime,
   getCurrentStreakHonest,
   getSmokingStreak,
+  updateSettings,
 } from '../lib/storage'
 import {
   computeAchievementStats,
   computeUnlockedBadges,
   computeShieldStatus,
   buildCalendarGrid,
+  cellLevel,
 } from '../lib/achievements'
 import {
   MILESTONES,
@@ -134,17 +137,37 @@ function StreakSummaryCard({ streak, smokingStreak, shield, weekXP }) {
 
 // ── Calendar grid ─────────────────────────────────────────────────────────────
 
-function CalendarGrid({ grid }) {
+function CalendarGrid({ grid, goal, target }) {
   const dayLabels = ['M', 'T', 'W', 'T', 'F', 'S', 'S']
 
-  const dotColor = {
-    success: '#4ADE80',
-    warning: '#FBBF24',
-    danger:  '#F87171',
-    logged:  '#6366F1',
-    empty:   'var(--surface-2)',
-    future:  'transparent',
+  // Intensity ramps (light → dark). Darker = more cigarettes that day.
+  const RAMP = {
+    good:    ['#bbf7d0', '#4ade80', '#22c55e', '#15803d', '#14532d'],
+    over:    ['#fecaca', '#f87171', '#ef4444', '#dc2626', '#7f1d1d'],
+    neutral: ['#c7d2fe', '#818cf8', '#6366f1', '#4f46e5', '#3730a3'],
   }
+
+  function cellBg(day) {
+    if (day.band === 'future') return 'transparent'
+    if (day.band === 'empty') return 'var(--surface-2)'
+    const ramp = RAMP[day.band] ?? RAMP.neutral
+    return ramp[cellLevel(day.band, day.count ?? 0, target)]
+  }
+
+  const isAware = goal === 'awareness'
+  const legend = isAware
+    ? [
+        { color: RAMP.neutral[1], label: 'Fewer', help: HELP.legendFewer },
+        { color: RAMP.neutral[4], label: 'More', help: HELP.legendMore },
+        { color: 'var(--surface-2)', label: 'No data', border: true, help: HELP.legendNoData },
+      ]
+    : [
+        { color: RAMP.good[2], label: 'On target', help: HELP.legendOnTarget },
+        { color: RAMP.over[2], label: 'Over target', help: HELP.legendOverTarget },
+        { color: 'var(--surface-2)', label: 'No data', border: true, help: HELP.legendNoData },
+      ]
+
+  const rampForHint = isAware ? RAMP.neutral : RAMP.over
 
   return (
     <div>
@@ -166,35 +189,34 @@ function CalendarGrid({ grid }) {
                 key={di}
                 className="w-5 h-5 rounded-[4px]"
                 style={{
-                  background: day.status === 'future'
-                    ? 'transparent'
-                    : dotColor[day.status] ?? 'var(--surface-2)',
-                  border: day.status === 'empty' || day.status === 'future'
-                    ? '1px solid var(--border)'
-                    : 'none',
-                  opacity: day.status === 'future' ? 0 : 1,
+                  background: cellBg(day),
+                  border: day.band === 'empty' ? '1px solid var(--border)' : 'none',
+                  opacity: day.band === 'future' ? 0 : 1,
                 }}
-                title={day.date + (day.count !== null ? ` · ${day.count}` : '')}
+                title={day.date + (day.count != null ? ` · ${day.count} cig${day.count === 1 ? '' : 's'}` : '')}
               />
             ))}
           </div>
         ))}
       </div>
 
+      {/* Intensity hint */}
+      <div className="flex items-center gap-1 mt-3">
+        <span className="text-[9px]" style={{ color: 'var(--dim)' }}>fewer</span>
+        {rampForHint.map((c, i) => (
+          <div key={i} className="w-3 h-3 rounded-sm" style={{ background: c }} />
+        ))}
+        <span className="text-[9px]" style={{ color: 'var(--dim)' }}>more</span>
+        <span className="text-[9px] ml-1.5" style={{ color: 'var(--dim)' }}>darker = more cigarettes</span>
+      </div>
+
       {/* Legend */}
-      <div className="flex items-center gap-4 mt-3">
-        {[
-          { color: '#4ADE80', label: 'On target', help: HELP.legendOnTarget },
-          { color: '#F87171', label: 'Over target', help: HELP.legendOverTarget },
-          { color: 'var(--surface-2)', label: 'No data', border: true, help: HELP.legendNoData },
-        ].map(({ color, label, border, help }) => (
+      <div className="flex items-center flex-wrap gap-x-4 gap-y-1 mt-2">
+        {legend.map(({ color, label, border, help }) => (
           <div key={label} className="flex items-center gap-1">
             <div
               className="w-3 h-3 rounded-sm"
-              style={{
-                background: color,
-                border: border ? '1px solid var(--border)' : 'none',
-              }}
+              style={{ background: color, border: border ? '1px solid var(--border)' : 'none' }}
             />
             <span className="text-[10px] font-normal" style={{ color: 'var(--dim)' }}>{label}</span>
             <InfoTip text={help.text} label={help.label} size={12} />
@@ -252,6 +274,7 @@ function MilestoneCard({ milestone, reached }) {
 // ── Main ──────────────────────────────────────────────────────────────────────
 
 export default function Journey() {
+  const navigate = useNavigate()
   const [data, setData] = useState(null)
 
   useEffect(() => {
@@ -281,6 +304,9 @@ export default function Journey() {
         badges,
         shield,
         grid,
+        dayStats,
+        settings,
+        target: settings?.dailyTarget ?? null,
         streak,
         smokingStreak,
         weekXP: stats.weekXP,
@@ -299,6 +325,16 @@ export default function Journey() {
         <div className="w-2.5 h-2.5 rounded-full animate-pulse" style={{ background: 'var(--accent)' }} />
       </div>
     )
+  }
+
+  async function changeTarget(delta) {
+    const cur = data.target ?? 5
+    const next = Math.max(1, Math.min(40, cur + delta))
+    if (next === cur) return
+    const newSettings = { ...data.settings, dailyTarget: next }
+    await updateSettings({ dailyTarget: next })
+    const grid = buildCalendarGrid(data.dayStats, newSettings, 12)
+    setData((prev) => ({ ...prev, target: next, settings: newSettings, grid }))
   }
 
   const unlockedCount = data.badges.filter((b) => b.unlocked).length
@@ -342,11 +378,54 @@ export default function Journey() {
         {/* Calendar */}
         <section>
           <SectionHeader title="12-Week Record" help={HELP.calendar} />
+
+          {/* Daily target — visible and editable in context */}
+          <div
+            className="flex items-center justify-between mb-3 px-4 py-2.5 rounded-xl"
+            style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}
+          >
+            <span className="flex items-center gap-1 text-xs font-sans" style={{ color: 'var(--muted)' }}>
+              Daily target
+              <InfoTip text={HELP.dailyTarget.text} label={HELP.dailyTarget.label} size={12} />
+            </span>
+            {data.goal === 'reduce' ? (
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => changeTarget(-1)}
+                  aria-label="Lower target"
+                  className="w-8 h-8 rounded-lg border border-border bg-surface-2 text-muted text-base flex items-center justify-center"
+                >
+                  −
+                </button>
+                <span className="font-display text-lg text-text text-center" style={{ minWidth: 56 }}>
+                  {data.target}<span className="text-[10px] text-muted"> /day</span>
+                </span>
+                <button
+                  onClick={() => changeTarget(1)}
+                  aria-label="Raise target"
+                  className="w-8 h-8 rounded-lg border border-border bg-surface-2 text-muted text-base flex items-center justify-center"
+                >
+                  +
+                </button>
+              </div>
+            ) : data.goal === 'quit' ? (
+              <span className="text-xs font-sans" style={{ color: 'var(--accent)' }}>Smoke-free · 0/day</span>
+            ) : (
+              <button
+                onClick={() => navigate('/settings')}
+                className="text-xs font-sans px-3 py-1.5 rounded-lg"
+                style={{ background: 'var(--accent)', color: 'var(--bg)' }}
+              >
+                Set a target
+              </button>
+            )}
+          </div>
+
           <div
             className="p-4 rounded-2xl"
             style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}
           >
-            <CalendarGrid grid={data.grid} />
+            <CalendarGrid grid={data.grid} goal={data.goal} target={data.target} />
           </div>
         </section>
 

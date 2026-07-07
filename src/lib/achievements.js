@@ -189,21 +189,45 @@ export function computeShieldStatus(allDayStats, settings) {
 
 // ── Calendar grid: last N weeks of performance ────────────────────────────────
 
+// Which side of the target a day falls on. Pure + unit-tested.
+//   quit     → target is zero: 0 = 'good', anything = 'over'
+//   reduce   → 'good' if count <= dailyTarget, else 'over'
+//   awareness→ no target, so 'neutral' (shaded by volume only)
+export function dayBand(count, goal, dailyTarget) {
+  if (goal === 'quit') return count === 0 ? 'good' : 'over'
+  if (goal === 'reduce' && dailyTarget != null) return count <= dailyTarget ? 'good' : 'over'
+  return 'neutral'
+}
+
+// Intensity level 0..4 for a day — higher = more cigarettes = darker shade.
+//   good : 0 cigs = lightest, climbing toward the target = darker
+//   over : starts at level 1 and deepens the further over the target
+//   neutral (awareness): scaled against a nominal 10/day
+export function cellLevel(band, count, dailyTarget) {
+  const clamp = (n) => Math.max(0, Math.min(4, n))
+  if (band === 'good') {
+    if (!dailyTarget) return 0 // quit: a good day is always 0 cigs
+    return clamp(Math.round((count / dailyTarget) * 4))
+  }
+  if (band === 'over') {
+    const over = dailyTarget != null ? count - dailyTarget : count
+    const scale = Math.max(1, dailyTarget || 5)
+    return clamp(Math.max(1, Math.round((over / scale) * 4)))
+  }
+  // neutral
+  return clamp(Math.round((count / 10) * 4))
+}
+
 export function buildCalendarGrid(allDayStats, settings, weeks = 12) {
   const goal = settings?.goal ?? 'awareness'
   const dailyTarget = settings?.dailyTarget ?? null
 
-  function getStatus(stat) {
-    if (!stat) return 'empty'
-    if (goal === 'quit') return stat.count === 0 ? 'success' : 'danger'
-    if (goal === 'reduce' && dailyTarget !== null) {
-      if (stat.count === 0) return 'success'
-      if (stat.count <= dailyTarget) return 'success'
-      if (stat.count <= dailyTarget + 2) return 'warning'
-      return 'danger'
-    }
-    // awareness — show relative intensity
-    return stat.count > 0 ? 'logged' : 'empty'
+  function cell(stat) {
+    if (!stat) return { band: 'empty', count: null }
+    const band = dayBand(stat.count, goal, dailyTarget)
+    // A recorded-but-zero day in awareness mode is effectively empty.
+    if (band === 'neutral' && stat.count === 0) return { band: 'empty', count: 0 }
+    return { band, count: stat.count }
   }
 
   const statsMap = {}
@@ -220,11 +244,8 @@ export function buildCalendarGrid(allDayStats, settings, weeks = 12) {
       const date = subDays(today, w * 7 + d)
       const ds = dateStr(date)
       const isFuture = date > today
-      week.push({
-        date: ds,
-        status: isFuture ? 'future' : getStatus(statsMap[ds]),
-        count: statsMap[ds]?.count ?? null,
-      })
+      const c = isFuture ? { band: 'future', count: null } : cell(statsMap[ds])
+      week.push({ date: ds, band: c.band, count: c.count })
     }
     grid.push(week)
   }
