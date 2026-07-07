@@ -21,6 +21,7 @@ import { openPrintReport } from '../lib/print-report'
 import { getThemePref, setThemePref } from '../lib/theme'
 import { signOut } from '../lib/auth'
 import { generateShareCard } from '../lib/share-card'
+import { seedDemoData } from '../lib/demo-seed'
 import { reasonLabels, getReasons } from '../lib/reasons'
 import {
   setBackupReminder,
@@ -72,6 +73,11 @@ export default function Settings() {
   const [pricePackVal, setPricePackVal] = useState('')
   const [pricePerPackVal, setPricePerPackVal] = useState('')
   const [priceSingleVal, setPriceSingleVal] = useState('')
+  const [addingBrand, setAddingBrand] = useState(false)
+  const [newBrandName, setNewBrandName] = useState('')
+  const [newBrandPack, setNewBrandPack] = useState('')
+  const [newBrandPerPack, setNewBrandPerPack] = useState('')
+  const [newBrandSingle, setNewBrandSingle] = useState('')
 
   // Currency
   const [pendingCurrency, setPendingCurrency] = useState(null)
@@ -92,6 +98,7 @@ export default function Settings() {
 
   // Share / report generating state
   const [generating, setGenerating] = useState(false)
+  const [seeding, setSeeding] = useState(false)
 
   // Clear data
   const [clearStep, setClearStep] = useState(0) // 0 = default, 1 = first confirm, 2 = second confirm
@@ -190,6 +197,38 @@ export default function Settings() {
     setEditingPrice(true)
   }
 
+  async function addBrand() {
+    const name = newBrandName.trim()
+    if (!name) return
+    if (brands.some((b) => b.name.toLowerCase() === name.toLowerCase())) {
+      // Brand already exists — just select it.
+      setPendingBrand(name)
+      resetAddBrand()
+      await updateSettings({ defaultBrand: name })
+      setSettings((prev) => ({ ...prev, defaultBrand: name }))
+      return
+    }
+    const brand = {
+      name,
+      packPrice: parseFloat(newBrandPack) || 0,
+      perPack: parseInt(newBrandPerPack) || 20,
+      singlePrice: parseFloat(newBrandSingle) || 0,
+    }
+    const updatedBrands = [...brands, brand]
+    await updateSettings({ brands: updatedBrands, defaultBrand: name })
+    setSettings((prev) => ({ ...prev, brands: updatedBrands, defaultBrand: name }))
+    setPendingBrand(name)
+    resetAddBrand()
+  }
+
+  function resetAddBrand() {
+    setAddingBrand(false)
+    setNewBrandName('')
+    setNewBrandPack('')
+    setNewBrandPerPack('')
+    setNewBrandSingle('')
+  }
+
   function handleCurrencySelect(c) {
     if (c === (settings.currency ?? 'INR')) return
     setPendingCurrency(c)
@@ -271,6 +310,16 @@ export default function Settings() {
       })
     } finally {
       setGenerating(false)
+    }
+  }
+
+  async function handleLoadDemo() {
+    setSeeding(true)
+    try {
+      await seedDemoData(30)
+      window.location.reload()
+    } finally {
+      setSeeding(false)
     }
   }
 
@@ -502,7 +551,40 @@ export default function Settings() {
                 {b.name}
               </button>
             ))}
+            <button
+              onClick={() => setAddingBrand((v) => !v)}
+              className="px-2.5 py-1.5 rounded-lg text-[10px] font-sans border border-dashed transition-all duration-150"
+              style={{ background: 'transparent', color: 'var(--muted)', borderColor: 'var(--border)' }}
+            >
+              {addingBrand ? 'Cancel' : '+ Add'}
+            </button>
           </div>
+
+          {/* Add-brand form */}
+          {addingBrand && (
+            <div className="space-y-2 mb-3">
+              <input
+                value={newBrandName}
+                onChange={(e) => setNewBrandName(e.target.value)}
+                placeholder="Brand name"
+                className="w-full px-3 py-2 rounded-lg text-xs font-sans bg-surface-2 border border-border text-body outline-none"
+                style={{ background: 'var(--surface-2)', color: 'var(--body)', borderColor: 'var(--border)' }}
+              />
+              <div className="flex gap-2">
+                <PriceField label="Pack price" value={newBrandPack} onChange={setNewBrandPack} />
+                <PriceField label="Per pack" value={newBrandPerPack} onChange={setNewBrandPerPack} />
+                <PriceField label="Single" value={newBrandSingle} onChange={setNewBrandSingle} />
+              </div>
+              <button
+                onClick={addBrand}
+                disabled={!newBrandName.trim()}
+                className="w-full py-1.5 rounded-lg text-[10px] font-sans disabled:opacity-40"
+                style={{ background: 'var(--accent)', color: 'var(--bg)' }}
+              >
+                Add & use this brand
+              </button>
+            </div>
+          )}
 
           {/* Price summary */}
           {activeBrand && !editingPrice && (
@@ -616,6 +698,36 @@ export default function Settings() {
             className="w-full py-2 rounded-xl text-xs font-sans border border-border bg-surface-2 text-muted mb-2"
           >
             Download my data
+          </button>
+
+          <input
+            ref={importInputRef}
+            type="file"
+            accept="application/json,.json"
+            onChange={handleImport}
+            className="hidden"
+          />
+          <button
+            onClick={() => importInputRef.current?.click()}
+            className="w-full py-2 rounded-xl text-xs font-sans border border-border bg-surface-2 text-muted mb-2"
+          >
+            Import data
+          </button>
+          {importStatus && (
+            <p
+              className="text-[10px] font-sans text-center mb-2"
+              style={{ color: importStatus === 'ok' ? 'var(--success)' : 'var(--danger)' }}
+            >
+              {importMsg}
+            </p>
+          )}
+
+          <button
+            onClick={handleLoadDemo}
+            disabled={seeding}
+            className="w-full py-2 rounded-xl text-xs font-sans border border-dashed border-border bg-transparent text-dim mb-2 disabled:opacity-50"
+          >
+            {seeding ? 'Loading demo…' : 'Load 30 days of demo data'}
           </button>
 
           {/* Backup is automatic via your account — no files to manage */}

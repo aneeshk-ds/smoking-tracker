@@ -1,9 +1,15 @@
 // Generates a 1080x1350 share card PNG (Instagram portrait format).
 // Uses the browser Canvas 2D API only — no external dependencies.
+// Fonts follow the app's SF Pro / system-sans stack for brand consistency.
 
 import { formatCurrency } from './format'
 
-export async function generateShareCard({ month, totalSmoked, avgPerDay, totalSpent, currency, streak, goal }) {
+// System SF-first stack. Canvas needs concrete family names; these resolve to
+// SF Pro on Apple devices, Segoe UI / Roboto elsewhere, sans-serif as a floor.
+const SANS = '-apple-system, "SF Pro Display", "SF Pro Text", "Segoe UI", Roboto, system-ui, sans-serif'
+
+// Draw the card onto a canvas and return a PNG Blob (no side effects).
+export async function renderShareCardBlob({ month, totalSmoked, avgPerDay, totalSpent, currency, streak, goal }) {
   const W = 1080
   const H = 1350
   const canvas = document.createElement('canvas')
@@ -25,17 +31,17 @@ export async function generateShareCard({ month, totalSmoked, avgPerDay, totalSp
     }
   }
 
-  // Accent accent line at top
+  // Accent line at top
   ctx.fillStyle = '#00e5a0'
   ctx.fillRect(80, 90, 80, 3)
 
   // ── Header ──
-  ctx.fillStyle = '#555555'
-  ctx.font = '500 32px "JetBrains Mono", monospace'
+  ctx.fillStyle = '#777788'
+  ctx.font = `600 32px ${SANS}`
   ctx.fillText('TRACKER', 80, 140)
 
   ctx.fillStyle = '#999999'
-  ctx.font = '400 32px "JetBrains Mono", monospace'
+  ctx.font = `400 32px ${SANS}`
   ctx.fillText(month, W - 80 - ctx.measureText(month).width, 140)
 
   // Divider
@@ -48,13 +54,13 @@ export async function generateShareCard({ month, totalSmoked, avgPerDay, totalSp
 
   // ── Primary number ──
   ctx.fillStyle = '#f0f0f8'
-  ctx.font = '300 280px "Fraunces", Georgia, serif'
+  ctx.font = `200 280px ${SANS}`
   const numStr = String(totalSmoked)
   const numW = ctx.measureText(numStr).width
   ctx.fillText(numStr, (W - numW) / 2, 560)
 
-  ctx.fillStyle = '#555555'
-  ctx.font = '500 36px "JetBrains Mono", monospace'
+  ctx.fillStyle = '#777788'
+  ctx.font = `500 36px ${SANS}`
   const cigLabel = `cigarette${totalSmoked !== 1 ? 's' : ''} this month`
   const cigW = ctx.measureText(cigLabel).width
   ctx.fillText(cigLabel, (W - cigW) / 2, 630)
@@ -69,12 +75,12 @@ export async function generateShareCard({ month, totalSmoked, avgPerDay, totalSp
   stats.forEach(({ label, value }, i) => {
     const cx = 80 + i * colW + colW / 2
     ctx.fillStyle = '#f0f0f8'
-    ctx.font = '300 80px "Fraunces", Georgia, serif'
+    ctx.font = `200 80px ${SANS}`
     const vW = ctx.measureText(value).width
     ctx.fillText(value, cx - vW / 2, 820)
 
-    ctx.fillStyle = '#555555'
-    ctx.font = '500 28px "JetBrains Mono", monospace'
+    ctx.fillStyle = '#777788'
+    ctx.font = `500 28px ${SANS}`
     const lW = ctx.measureText(label).width
     ctx.fillText(label, cx - lW / 2, 870)
   })
@@ -91,7 +97,7 @@ export async function generateShareCard({ month, totalSmoked, avgPerDay, totalSp
   const goalStr = `goal: ${goal}`
   const streakStr = streak ? `streak: ${streak}` : ''
   ctx.fillStyle = '#999999'
-  ctx.font = '500 30px "JetBrains Mono", monospace'
+  ctx.font = `500 30px ${SANS}`
   ctx.fillText(goalStr, 80, 980)
   if (streakStr) {
     const sw = ctx.measureText(streakStr).width
@@ -103,20 +109,54 @@ export async function generateShareCard({ month, totalSmoked, avgPerDay, totalSp
   ctx.fillRect(80, 1210, 80, 3)
 
   // ── Footer ──
-  ctx.fillStyle = '#333345'
-  ctx.font = '400 28px "JetBrains Mono", monospace'
+  ctx.fillStyle = '#444455'
+  ctx.font = `400 28px ${SANS}`
   ctx.fillText('All data stays on your device.', 80, 1280)
 
-  // Convert to PNG blob and download
   return new Promise((resolve) => {
-    canvas.toBlob((blob) => {
-      const url = URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = `tracker-${month.replace(' ', '-').toLowerCase()}.png`
-      a.click()
-      URL.revokeObjectURL(url)
-      resolve()
-    }, 'image/png')
+    canvas.toBlob((blob) => resolve(blob), 'image/png')
   })
+}
+
+// Trigger a plain file download of a blob.
+function downloadBlob(blob, filename) {
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = filename
+  a.click()
+  URL.revokeObjectURL(url)
+}
+
+// Public entry point. Renders the card, then:
+//  1. On devices that support sharing files (most phones), opens the native
+//     share sheet so the image can go straight to WhatsApp/Messages/etc.
+//  2. Otherwise (or if the user cancels), downloads the PNG.
+// Returns 'shared' | 'downloaded'.
+export async function generateShareCard(meta) {
+  const blob = await renderShareCardBlob(meta)
+  const filename = `tracker-${String(meta.month).replace(/\s+/g, '-').toLowerCase()}.png`
+  const file = new File([blob], filename, { type: 'image/png' })
+
+  const canShareFiles =
+    typeof navigator !== 'undefined' &&
+    navigator.canShare &&
+    navigator.canShare({ files: [file] })
+
+  if (canShareFiles) {
+    try {
+      await navigator.share({
+        files: [file],
+        title: 'My tracker',
+        text: `${meta.totalSmoked} cigarettes this month.`,
+      })
+      return 'shared'
+    } catch (e) {
+      // User dismissed the sheet, or share failed — fall through to download.
+      if (e && e.name === 'AbortError') return 'shared'
+    }
+  }
+
+  downloadBlob(blob, filename)
+  return 'downloaded'
 }

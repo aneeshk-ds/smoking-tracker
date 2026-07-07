@@ -1,13 +1,16 @@
-// Tracker Service Worker — minimal offline shell cache
-const CACHE = 'tracker-v1'
+// Tracker Service Worker — minimal offline shell cache.
+// Base-aware: works whether served from "/" (local) or "/smoking-tracker/" (GH Pages).
+const CACHE = 'tracker-v2'
+
+// The SW lives at <base>sw.js, so its directory IS the app base.
+const BASE = self.location.pathname.replace(/sw\.js$/, '') // e.g. "/smoking-tracker/"
+const SHELL = BASE + 'index.html'
 
 // On install: cache the SPA shell
 self.addEventListener('install', (e) => {
   self.skipWaiting()
   e.waitUntil(
-    caches.open(CACHE).then((c) =>
-      c.addAll(['/', '/index.html'])
-    )
+    caches.open(CACHE).then((c) => c.addAll([BASE, SHELL]))
   )
 })
 
@@ -21,23 +24,19 @@ self.addEventListener('activate', (e) => {
   self.clients.claim()
 })
 
-// Fetch: network-first for API calls, cache-first for assets, SPA fallback
+// Fetch: SPA fallback for navigations, cache-first for same-origin assets
 self.addEventListener('fetch', (e) => {
   if (e.request.method !== 'GET') return
 
   const url = new URL(e.request.url)
 
-  // Navigation requests → serve index.html (SPA routing)
+  // Navigation requests → network, fall back to cached shell offline
   if (e.request.mode === 'navigate') {
-    e.respondWith(
-      fetch(e.request).catch(() =>
-        caches.match('/index.html')
-      )
-    )
+    e.respondWith(fetch(e.request).catch(() => caches.match(SHELL)))
     return
   }
 
-  // Static assets → cache-first
+  // Same-origin static assets → cache-first
   if (url.origin === self.location.origin) {
     e.respondWith(
       caches.match(e.request).then((cached) => {
