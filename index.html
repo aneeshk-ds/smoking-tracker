@@ -18,9 +18,12 @@
         var p = window.location.search.match(/[?&]p=([^&]*)/);
         var q = window.location.search.match(/[?&]q=([^&]*)/);
         if (p) {
+          // Prefix with the current base path (e.g. /smoking-tracker) so the
+          // restored URL stays under the app base and matches the router.
+          var base = window.location.pathname.replace(/\/$/, '');
           window.history.replaceState(
             null, null,
-            '/' + p[1].replace(/~and~/g, '&') +
+            base + '/' + p[1].replace(/~and~/g, '&') +
             (q ? '?' + q[1].replace(/~and~/g, '&') : '') +
             window.location.hash
           );

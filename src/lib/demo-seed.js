@@ -2,7 +2,8 @@
 // see how the metrics, charts and streaks look with data in them.
 // Entries trend gently downward over time to illustrate "reduce" progress.
 
-import { logCigarette, getSettings } from './storage'
+import { logCigarette, getSettings, updateSettings } from './storage'
+import { INDIAN_BRANDS } from './brands'
 
 const TRIGGERS = ['stress', 'coffee', 'boredom', 'social', 'after-meal', 'phone']
 const LOCATIONS = ['home', 'work', 'balcony', 'car', 'outside']
@@ -23,7 +24,19 @@ function countForDay(dayIndex, totalDays) {
 
 // Seed `days` days of history ending today. Returns number of entries created.
 export async function seedDemoData(days = 30) {
-  const settings = await getSettings()
+  let settings = await getSettings()
+  // Ensure a priced brand is configured, otherwise every demo entry costs 0
+  // and all the money metrics read zero.
+  if (!settings?.brands?.length || !settings?.defaultBrand) {
+    const brands = settings?.brands?.length ? settings.brands : INDIAN_BRANDS
+    const defaultBrand = settings?.defaultBrand ?? brands[0].name
+    await updateSettings({
+      brands,
+      defaultBrand,
+      defaultPurchaseType: settings?.defaultPurchaseType ?? 'pack',
+    })
+    settings = await getSettings()
+  }
   const brand = settings?.defaultBrand ?? settings?.brands?.[0]?.name ?? null
   const purchaseType = settings?.defaultPurchaseType ?? 'pack'
 

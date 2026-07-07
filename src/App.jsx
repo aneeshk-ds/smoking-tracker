@@ -1,5 +1,13 @@
 import { useEffect, useState } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+
+// Keep app routes under the deploy base (e.g. /smoking-tracker) so deep links
+// and refreshes resolve instead of bouncing to root.
+const ROUTER_BASENAME = (() => {
+  const b = import.meta.env.BASE_URL || '/'
+  if (!b.startsWith('/')) return '/'      // './' during dev
+  return b.replace(/\/$/, '') || '/'
+})()
 import { getSettings } from './lib/storage'
 import Home      from './routes/Home'
 import Onboarding from './routes/Onboarding'
@@ -32,7 +40,7 @@ export default function App() {
 
   return (
     <AuthProvider>
-    <BrowserRouter>
+    <BrowserRouter basename={ROUTER_BASENAME}>
       <Routes>
         <Route
           path="/"
