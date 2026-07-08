@@ -21,6 +21,7 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null)
   const [status, setStatus] = useState(cloud ? 'signed-out' : 'local')
   const stopSyncRef = useRef(null)
+  const syncedUidRef = useRef(null)
 
   // Finish an email-link sign-in if we were redirected back into the app.
   useEffect(() => {
@@ -33,7 +34,13 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     if (!cloud) return
     const unsub = watchAuth(async (u) => {
+      const uid = u?.id ?? null
+      // watchAuth emits on getSession() AND every auth event (initial, token
+      // refresh, etc). Skip if we're already syncing this same user, so we
+      // don't spin up a duplicate realtime channel / re-reconcile needlessly.
+      if (uid && uid === syncedUidRef.current && stopSyncRef.current) return
       if (stopSyncRef.current) { stopSyncRef.current(); stopSyncRef.current = null }
+      syncedUidRef.current = uid
       setUser(describeUser(u))
       if (u) {
         setStatus('syncing')
@@ -43,6 +50,7 @@ export function AuthProvider({ children }) {
         } catch (e) {
           logError('auth.sync-start', e)
           setStatus('error')
+          syncedUidRef.current = null
         }
       } else {
         setStatus('signed-out')

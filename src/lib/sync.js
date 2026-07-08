@@ -133,8 +133,16 @@ export function subscribeRemote(uid, onApplied) {
   const sb = getSupabase()
   if (!sb || !uid) return () => {}
 
+  // Tear down any stale channel for this user, then use a unique channel name so
+  // repeated subscribe attempts never collide ("callbacks after subscribe()").
+  try {
+    for (const ch of sb.getChannels()) {
+      if (typeof ch.topic === 'string' && ch.topic.includes(`sync:${uid}`)) sb.removeChannel(ch)
+    }
+  } catch { /* ignore */ }
+
   const channel = sb
-    .channel(`sync:${uid}`)
+    .channel(`sync:${uid}:${Date.now()}`)
     .on('postgres_changes',
       { event: '*', schema: 'public', table: 'cigarettes', filter: `user_id=eq.${uid}` },
       (payload) => {
