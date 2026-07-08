@@ -2,7 +2,23 @@
 
 **Live app →** https://aneeshk-ds.github.io/smoking-tracker/
 
-A private, offline-first PWA for tracking a smoking habit. No accounts. No cloud. All data stays on the device.
+A private, offline-first PWA for tracking a smoking habit. Local-first — works fully offline with no account. Sign in optionally to back up and sync across devices.
+
+---
+
+## Screenshots
+
+<p align="center">
+  <img src="docs/screenshots/home.png" width="30%" alt="Home dashboard" />
+  <img src="docs/screenshots/journey.png" width="30%" alt="Journey: streaks, achievements, 12-week calendar" />
+  <img src="docs/screenshots/insights.png" width="30%" alt="Insights: charts and breakdowns" />
+</p>
+<p align="center">
+  <img src="docs/screenshots/history.png" width="30%" alt="History log" />
+  <img src="docs/screenshots/health.png" width="30%" alt="Health recovery milestones" />
+</p>
+
+*Shown with sample data (Reduce goal, 8/day target).*
 
 ---
 
