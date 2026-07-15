@@ -26,6 +26,8 @@ import ReasonCard from '../components/ReasonCard'
 import NudgeCard from '../components/NudgeCard'
 import PreSmokeModal from '../components/PreSmokeModal'
 import { pickNudge, preSmokePauseOn } from '../lib/reminders'
+import CompanionCard from '../components/CompanionCard'
+import { getCompanion } from '../lib/companion'
 import InfoTip from '../components/InfoTip'
 import { HELP } from '../lib/help'
 import Tour from '../components/Tour'
@@ -194,6 +196,7 @@ export default function Home() {
   const orbStatus   = computeOrbStatus(count, goal, dailyTarget)
   const dateLabel   = format(new Date(), 'EEE, d MMM')
   const nudge       = nudgeDismissed ? null : pickNudge({ count, goal, dailyTarget })
+  const companion   = getCompanion(settings)
 
   return (
     <div className="min-h-screen flex flex-col pb-28" style={{ background: 'var(--bg)' }}>
@@ -222,8 +225,10 @@ export default function Home() {
           </div>
         </div>
 
-        {/* In-app nudge */}
-        {nudge && <NudgeCard nudge={nudge} onDismiss={() => setNudgeDismissed(true)} />}
+        {/* Companion / in-app nudge */}
+        {companion.enabled
+          ? <CompanionCard companion={companion} count={count} goal={goal} dailyTarget={dailyTarget} onTargetRate={smokeFreeRate?.rate ?? null} />
+          : (nudge && <NudgeCard nudge={nudge} onDismiss={() => setNudgeDismissed(true)} />)}
 
         {/* Breathing orb */}
         <div className="relative flex justify-center py-3" data-tour="orb">

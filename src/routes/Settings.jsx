@@ -27,6 +27,7 @@ import { HELP } from '../lib/help'
 import { requestTourReplay } from '../lib/tour'
 import { reasonLabels, getReasons } from '../lib/reasons'
 import { getReminderConfig, DEFAULT_REMINDERS, requestNotifyPermission } from '../lib/reminders'
+import { getCompanion, COMPANION_TYPES } from '../lib/companion'
 import {
   setBackupReminder,
   isBackupReminderEnabled,
@@ -105,6 +106,7 @@ export default function Settings() {
   const [seeding, setSeeding] = useState(false)
   const [reminders, setRemindersState] = useState({ enabled: false, times: DEFAULT_REMINDERS })
   const [preSmoke, setPreSmoke] = useState(false)
+  const [companion, setCompanionState] = useState({ enabled: false, type: 'sprout', name: '' })
 
   // Clear data
   const [clearStep, setClearStep] = useState(0) // 0 = default, 1 = first confirm, 2 = second confirm
@@ -129,6 +131,7 @@ export default function Settings() {
       if (s?.lastBackupAt) setLastBackupAt(s.lastBackupAt)
       setRemindersState(getReminderConfig(merged))
       setPreSmoke(!!merged.preSmokePause)
+      setCompanionState({ enabled: !!merged.companion?.enabled, type: merged.companion?.type || 'sprout', name: merged.companion?.name || '' })
     })
   }, [])
 
@@ -354,6 +357,12 @@ export default function Settings() {
     setPreSmoke(on)
     await updateSettings({ preSmokePause: on })
     setSettings((prev) => ({ ...prev, preSmokePause: on }))
+  }
+
+  async function saveCompanion(next) {
+    setCompanionState(next)
+    await updateSettings({ companion: next })
+    setSettings((prev) => ({ ...prev, companion: next }))
   }
 
   function toggleBackupReminder(val) {
@@ -704,6 +713,47 @@ export default function Settings() {
               </button>
             ))}
           </div>
+        </Section>
+
+        {/* ── Companion ── */}
+        <Section title="COMPANION" help={HELP.setCompanion}>
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-sans" style={{ color: 'var(--muted)' }}>Give me a companion to answer to</span>
+            <Toggle value={companion.enabled} onChange={(on) => saveCompanion({ ...companion, enabled: on })} />
+          </div>
+          {companion.enabled && (
+            <div className="mt-3 space-y-2.5">
+              <div className="flex gap-2">
+                {COMPANION_TYPES.map((t) => (
+                  <button
+                    key={t.id}
+                    onClick={() => saveCompanion({ ...companion, type: t.id })}
+                    className="flex-1 py-2 rounded-xl text-[10px] font-sans border transition-all"
+                    style={{
+                      background: companion.type === t.id ? 'rgba(0,229,160,0.12)' : 'var(--surface-2)',
+                      borderColor: companion.type === t.id ? 'rgba(0,229,160,0.4)' : 'var(--border)',
+                      color: companion.type === t.id ? 'var(--text)' : 'var(--muted)',
+                    }}
+                  >
+                    <div style={{ fontSize: 20 }}>{t.emoji}</div>
+                    <div className="mt-0.5">{t.label}</div>
+                    <div className="text-[9px]" style={{ color: 'var(--dim)' }}>{t.blurb}</div>
+                  </button>
+                ))}
+              </div>
+              <input
+                value={companion.name}
+                onChange={(e) => saveCompanion({ ...companion, name: e.target.value })}
+                placeholder="Name your companion"
+                maxLength={20}
+                className="w-full text-xs font-sans px-3 py-2 rounded-lg"
+                style={{ background: 'var(--surface-2)', border: '1px solid var(--border)', color: 'var(--text)' }}
+              />
+              <p className="text-[10px] font-sans leading-relaxed" style={{ color: 'var(--dim)' }}>
+                {(companion.name || 'They')} will greet you on Home, react to how your day goes, and be the one you keep on track.
+              </p>
+            </div>
+          )}
         </Section>
 
         {/* ── Reminders & nudges ── */}
