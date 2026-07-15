@@ -26,6 +26,7 @@ import InfoTip from '../components/InfoTip'
 import { HELP } from '../lib/help'
 import { requestTourReplay } from '../lib/tour'
 import { reasonLabels, getReasons } from '../lib/reasons'
+import { getReminderConfig, DEFAULT_REMINDERS, requestNotifyPermission } from '../lib/reminders'
 import {
   setBackupReminder,
   isBackupReminderEnabled,
@@ -102,6 +103,8 @@ export default function Settings() {
   // Share / report generating state
   const [generating, setGenerating] = useState(false)
   const [seeding, setSeeding] = useState(false)
+  const [reminders, setRemindersState] = useState({ enabled: false, times: DEFAULT_REMINDERS })
+  const [preSmoke, setPreSmoke] = useState(false)
 
   // Clear data
   const [clearStep, setClearStep] = useState(0) // 0 = default, 1 = first confirm, 2 = second confirm
@@ -124,6 +127,8 @@ export default function Settings() {
       setPendingPurchaseType(merged.defaultPurchaseType)
       if (s?.backupEnabled) setAutoBackupEnabled(true)
       if (s?.lastBackupAt) setLastBackupAt(s.lastBackupAt)
+      setRemindersState(getReminderConfig(merged))
+      setPreSmoke(!!merged.preSmokePause)
     })
   }, [])
 
@@ -324,6 +329,31 @@ export default function Settings() {
     } finally {
       setSeeding(false)
     }
+  }
+
+  async function saveReminders(next) {
+    await updateSettings({ reminders: next })
+    setRemindersState(next)
+    setSettings((prev) => ({ ...prev, reminders: next }))
+  }
+  async function toggleReminders(on) {
+    if (on) await requestNotifyPermission()
+    await saveReminders({ ...reminders, enabled: on })
+  }
+  function patchTime(id, patch) {
+    saveReminders({ ...reminders, times: reminders.times.map((t) => (t.id === id ? { ...t, ...patch } : t)) })
+  }
+  function removeTime(id) {
+    saveReminders({ ...reminders, times: reminders.times.filter((t) => t.id !== id) })
+  }
+  function addReminder() {
+    const t = { id: 'r_' + Date.now(), label: 'Reminder', time: '12:00', on: true }
+    saveReminders({ ...reminders, times: [...reminders.times, t] })
+  }
+  async function togglePreSmoke(on) {
+    setPreSmoke(on)
+    await updateSettings({ preSmokePause: on })
+    setSettings((prev) => ({ ...prev, preSmokePause: on }))
   }
 
   function toggleBackupReminder(val) {
@@ -673,6 +703,55 @@ export default function Settings() {
                 {c}
               </button>
             ))}
+          </div>
+        </Section>
+
+        {/* ── Reminders & nudges ── */}
+        <Section title="REMINDERS" help={HELP.setReminders}>
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-sans" style={{ color: 'var(--muted)' }}>Daily reminders &amp; nudges</span>
+            <Toggle value={reminders.enabled} onChange={toggleReminders} />
+          </div>
+
+          {reminders.enabled && (
+            <div className="mt-3 space-y-2">
+              {reminders.times.map((t) => (
+                <div key={t.id} className="flex items-center gap-2">
+                  <input
+                    type="time"
+                    value={t.time}
+                    onChange={(e) => patchTime(t.id, { time: e.target.value })}
+                    className="text-xs font-sans px-2 py-1.5 rounded-lg"
+                    style={{ background: 'var(--surface-2)', border: '1px solid var(--border)', color: 'var(--text)', colorScheme: 'dark' }}
+                  />
+                  <input
+                    value={t.label}
+                    onChange={(e) => patchTime(t.id, { label: e.target.value })}
+                    className="flex-1 min-w-0 text-xs font-sans px-2 py-1.5 rounded-lg"
+                    style={{ background: 'var(--surface-2)', border: '1px solid var(--border)', color: 'var(--text)' }}
+                  />
+                  <Toggle value={t.on !== false} onChange={(v) => patchTime(t.id, { on: v })} />
+                  <button onClick={() => removeTime(t.id)} aria-label="Remove reminder" className="text-sm px-1" style={{ color: 'var(--dim)' }}>✕</button>
+                </div>
+              ))}
+              <button
+                onClick={addReminder}
+                className="w-full py-2 rounded-xl text-[10px] font-sans border border-dashed border-border bg-transparent text-dim"
+              >
+                + Add reminder
+              </button>
+              <p className="text-[10px] font-sans leading-relaxed" style={{ color: 'var(--dim)' }}>
+                Reminders show in the app and as notifications while it’s installed. Background reminders when the app is fully closed are coming in the next update.
+              </p>
+            </div>
+          )}
+
+          <div className="mt-3 pt-3 flex items-center justify-between" style={{ borderTop: '1px solid var(--border)' }}>
+            <span className="flex items-center gap-1 text-xs font-sans" style={{ color: 'var(--muted)' }}>
+              Pause before you light up
+              <InfoTip text={HELP.setPreSmoke.text} label={HELP.setPreSmoke.label} size={12} />
+            </span>
+            <Toggle value={preSmoke} onChange={togglePreSmoke} />
           </div>
         </Section>
 

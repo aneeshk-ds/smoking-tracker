@@ -10,6 +10,7 @@ const ROUTER_BASENAME = (() => {
   return b.replace(/\/$/, '') || '/'
 })()
 import { getSettings } from './lib/storage'
+import { reminderTick } from './lib/reminders'
 import Home      from './routes/Home'
 import Onboarding from './routes/Onboarding'
 import Insights  from './routes/Insights'
@@ -29,6 +30,13 @@ export default function App() {
     getSettings().then((s) => {
       setOnboarded(!!s?.onboardedAt)
     })
+  }, [])
+
+  // App-wide reminder scheduler (in-app / best-effort local notifications).
+  useEffect(() => {
+    reminderTick()
+    const id = setInterval(() => reminderTick(), 60_000)
+    return () => clearInterval(id)
   }, [])
 
   if (onboarded === null) {

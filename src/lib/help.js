@@ -110,5 +110,13 @@ export const HELP = {
   setReasons: { label: 'Your reasons', text: 'The motivations shown on your home screen. Pick from the list or write your own — change them whenever they change.' },
   setBackup: { label: 'Backup & sync', text: 'Sign in to back your data up to your account and keep it synced across devices — like any app. Nothing to export by hand.' },
   setDemo: { label: 'Demo data', text: 'Loads 30 days of realistic sample entries so you can see how the charts and metrics look with data. Clear all data to remove it.' },
+  setReminders: {
+    label: 'Reminders & nudges',
+    text: 'Gentle check-ins so you don’t forget to log — and a feel-good note when you stay on target. Set your own times (4 meal-time defaults), or turn them off. Reminders show in the app and, on supported devices, as notifications while it’s installed; background reminders when the app is fully closed are coming next.',
+  },
+  setPreSmoke: {
+    label: 'Pause before you light up',
+    text: 'When on, tapping “Log” first offers a quick 10-minute delay — a small pause that helps many cravings pass. You can always log it anyway.',
+  },
   setReplayTour: { label: 'Replay the tour', text: 'Runs the quick guided walkthrough of the home screen again.' },
 }

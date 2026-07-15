@@ -23,6 +23,9 @@ import LapseRecoveryModal from '../components/LapseRecoveryModal'
 import CravingModal from '../components/CravingModal'
 import TodayLog from '../components/TodayLog'
 import ReasonCard from '../components/ReasonCard'
+import NudgeCard from '../components/NudgeCard'
+import PreSmokeModal from '../components/PreSmokeModal'
+import { pickNudge, preSmokePauseOn } from '../lib/reminders'
 import InfoTip from '../components/InfoTip'
 import { HELP } from '../lib/help'
 import Tour from '../components/Tour'
@@ -121,6 +124,8 @@ export default function Home() {
   const [lapseInfo, setLapseInfo]   = useState(null)
   const [showCraving, setShowCraving] = useState(false)
   const [showTour, setShowTour] = useState(false)
+  const [nudgeDismissed, setNudgeDismissed] = useState(false)
+  const [showPreSmoke, setShowPreSmoke] = useState(false)
 
   const load = useCallback(async () => {
     const [count, spend, streak, smokingStreak, projected, settings, smokeFreeRate] = await Promise.all([
@@ -188,6 +193,7 @@ export default function Home() {
   const currency    = settings?.currency ?? 'INR'
   const orbStatus   = computeOrbStatus(count, goal, dailyTarget)
   const dateLabel   = format(new Date(), 'EEE, d MMM')
+  const nudge       = nudgeDismissed ? null : pickNudge({ count, goal, dailyTarget })
 
   return (
     <div className="min-h-screen flex flex-col pb-28" style={{ background: 'var(--bg)' }}>
@@ -216,6 +222,9 @@ export default function Home() {
           </div>
         </div>
 
+        {/* In-app nudge */}
+        {nudge && <NudgeCard nudge={nudge} onDismiss={() => setNudgeDismissed(true)} />}
+
         {/* Breathing orb */}
         <div className="relative flex justify-center py-3" data-tour="orb">
           <BreathingOrb
@@ -237,7 +246,7 @@ export default function Home() {
 
         {/* Quick log */}
         <div data-tour="log"><QuickLogButton
-          onLogged={handleQuickLog}
+          onLogged={preSmokePauseOn(settings) ? () => setShowPreSmoke(true) : handleQuickLog}
           onLongPress={() => navigate('/log')}
           saving={saving}
         /></div>
@@ -294,6 +303,14 @@ export default function Home() {
 
       {showCraving && (
         <CravingModal onClose={() => setShowCraving(false)} />
+      )}
+
+      {showPreSmoke && (
+        <PreSmokeModal
+          onDelay={() => { setShowPreSmoke(false); setShowCraving(true) }}
+          onLogAnyway={() => { setShowPreSmoke(false); handleQuickLog() }}
+          onClose={() => setShowPreSmoke(false)}
+        />
       )}
 
       {showTour && <Tour onClose={() => setShowTour(false)} />}
