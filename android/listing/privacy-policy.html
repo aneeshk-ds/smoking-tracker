@@ -1,0 +1,23 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Privacy Policy — Smoking Tracker</title>
+<style>
+body{margin:0;background:#0a0e17;color:#eef2fb;font-family:-apple-system,"Segoe UI",Roboto,system-ui,sans-serif;line-height:1.6}
+.wrap{max-width:760px;margin:0 auto;padding:48px 22px}
+h1{font-size:30px;margin:0 0 6px} h2{font-size:20px;margin:28px 0 8px;color:#c4b5fd}
+p,li{color:#9fb0cc} b,strong{color:#eef2fb} a{color:#c4b5fd} em{color:#63748f}
+ul{padding-left:1.2em} hr{border:none;border-top:1px solid #22314e;margin:24px 0}
+</style></head><body><div class="wrap" id="c"></div>
+<script>
+var md = '# Privacy Policy — Smoking Tracker\n\n_Last updated: \n\nSmoking Tracker ("the app", "we") is built privacy-first. This policy explains what\nwe collect, why, and your choices.\n\n## The short version\n- The app works **fully offline with no account**. If you never sign in, **your data\n  never leaves your device**.\n- If you choose to **sign in** (email or Google) to back up and sync, a minimal set of\n  data is stored in our secure database so it can sync across your devices.\n- We **do not show ads**, **do not sell your data**, and **do not share it** with third\n  parties for their own purposes.\n\n## What we collect\n**If you do not sign in:** nothing. All logs and settings stay in your browser/app\nstorage on your device.\n\n**If you sign in (optional):**\n- **Email address** — to create and secure your account.\n- **Your smoking logs and app settings** — the cigarettes you log and your preferences,\n  stored so they can be backed up and synced to your other devices.\n\nWe do **not** collect location, contacts, photos, files, device identifiers, or an\nadvertising ID. Diagnostic logs are kept on your device and are not transmitted.\n\n## How we use it\nOnly to provide the app: authenticate your account and back up/sync your data across\nyour devices. Nothing else.\n\n## Who we share it with\nNo one. We do not sell, rent, or trade your data. Data is processed by our\ninfrastructure provider (Supabase) solely to run the sync service on our behalf.\n\n## Storage & security\nSynced data is transmitted over encrypted connections (HTTPS/TLS) and protected by\nper-user access controls — each account can only ever access its own data.\n\n## Your rights & choices\n- **Stay local:** simply don\'t sign in.\n- **Export:** download all your data as a file from within the app.\n- **Delete:** "Clear all data" in the app removes your data from the device and, if you\n  are signed in, from the cloud. You may also request full account deletion by emailing us.\n\n## Children\nThe app is not directed at children. It references tobacco in a cessation context and\nis rated for teens and above.\n\n## Changes\nWe may update this policy; material changes will be reflected here with a new date.\n\n## Contact\nQuestions or deletion requests: **ashrockstar022@gmail.com**\n';
+var lines = md.split("\n"), out = "", inList=false;
+function inl(s){return s.replace(/\*\*(.+?)\*\*/g,"<strong>$1</strong>").replace(/_(.+?)_/g,"<em>$1</em>").replace(/\[(.+?)\]\((.+?)\)/g,'<a href="$2">$1</a>');}
+for (var i=0;i<lines.length;i++){var l=lines[i];
+  if(/^# /.test(l)){out+="<h1>"+inl(l.slice(2))+"</h1>";}
+  else if(/^## /.test(l)){if(inList){out+="</ul>";inList=false;}out+="<h2>"+inl(l.slice(3))+"</h2>";}
+  else if(/^- /.test(l)){if(!inList){out+="<ul>";inList=true;}out+="<li>"+inl(l.slice(2))+"</li>";}
+  else{if(inList){out+="</ul>";inList=false;} if(l.trim()==="")continue; out+="<p>"+inl(l)+"</p>";}
+}
+if(inList)out+="</ul>";
+document.getElementById("c").innerHTML=out;
+</script></body></html>
